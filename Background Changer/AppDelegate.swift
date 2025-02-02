@@ -1,3 +1,11 @@
+//
+//  AppDelegate.swift
+//  Background Changer
+//
+//  Created by Dylan Chidambaram on 1/31/25.
+//
+
+
 import Cocoa
 import SwiftUI
 
@@ -6,17 +14,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var popover: NSPopover!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Create the menu bar icon
+        // ✅ Create menu bar item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "photo.fill", accessibilityDescription: "Wallpaper Changer")
             button.action = #selector(togglePopover)
+            button.target = self // ✅ Ensure the button is connected
         }
 
-        // Create the popover UI
+        // ✅ Create popover UI
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 300, height: 250)
+        popover.contentSize = NSSize(width: 480, height: 640)
         popover.behavior = .transient
+        popover.animates = true
         popover.contentViewController = NSHostingController(rootView: MenuBarView())
     }
 
