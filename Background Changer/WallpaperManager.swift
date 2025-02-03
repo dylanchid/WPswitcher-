@@ -84,6 +84,8 @@ class WallpaperManager: ObservableObject {
     @Published private var activePlaylistRotating: Bool = false
     private var playlistRotationInterval: TimeInterval = 60
     
+    @Published private(set) var currentWallpaperPath: String = ""
+    
     // MARK: - Initialization
     private init() {
         fileMonitor = FileMonitor { [weak self] in
@@ -105,6 +107,7 @@ class WallpaperManager: ObservableObject {
         
         do {
             try workspace.setDesktopImageURL(url, for: screen, options: options)
+            currentWallpaperPath = url.absoluteString
             
             // Update for all screens if needed
             if showOnAllSpaces {
@@ -124,7 +127,7 @@ class WallpaperManager: ObservableObject {
         
         // Reapply current wallpaper with new mode
         if let currentWallpaper = currentWallpaper {
-            try? setWallpaper(from: currentWallpaper, mode: mode)
+            try? setWallpaper(from: currentWallpaper)
         }
     }
     
@@ -313,10 +316,10 @@ class WallpaperManager: ObservableObject {
         // Load playlists
         loadPlaylists()
         
-        // Load wallpapers
+        // Load all photos
         if let data = UserDefaults.standard.data(forKey: wallpapersKey),
            let savedWallpapers = try? JSONDecoder().decode([WallpaperItem].self, from: data) {
-            // Verify files still exist
+            // Verify files still exist and update wallpapers
             wallpapers = savedWallpapers.filter { wallpaper in
                 if let url = wallpaper.fileURL {
                     return FileManager.default.fileExists(atPath: url.path)
@@ -452,6 +455,7 @@ class WallpaperManager: ObservableObject {
         currentIndex = (currentIndex + 1) % playlist.wallpapers.count
         if let nextWallpaper = playlist.wallpapers[currentIndex].fileURL {
             try setWallpaper(from: nextWallpaper)
+            currentWallpaperPath = nextWallpaper.absoluteString
         }
     }
     
@@ -460,6 +464,15 @@ class WallpaperManager: ObservableObject {
             return playlistRotationInterval
         }
         return 60 // Default interval
+    }
+    
+    func getCurrentSystemWallpaper() -> (URL, NSImage)? {
+        guard let screen = NSScreen.main,
+              let wallpaperURL = try? NSWorkspace.shared.desktopImageURL(for: screen),
+              let image = NSImage(contentsOf: wallpaperURL) else {
+            return nil
+        }
+        return (wallpaperURL, image)
     }
 }
 

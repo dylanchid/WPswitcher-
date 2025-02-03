@@ -52,6 +52,14 @@ struct MenuBarView: View {
     
     @StateObject private var wallpaperManager = WallpaperManager.shared
     
+    init() {
+        _wallpaperManager = StateObject(wrappedValue: WallpaperManager.shared)
+        // Set initial wallpaper
+        if let (wallpaperURL, _) = WallpaperManager.shared.getCurrentSystemWallpaper() {
+            _selectedImagePath = State(initialValue: wallpaperURL.absoluteString)
+        }
+    }
+    
     var body: some View {
         NavigationView {
             List {
@@ -95,6 +103,11 @@ struct MenuBarView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "An unknown error occurred")
+        }
+        .onReceive(wallpaperManager.$currentWallpaperPath) { newPath in
+            if !newPath.isEmpty {
+                selectedImagePath = newPath
+            }
         }
     }
     
@@ -338,7 +351,7 @@ struct PlaylistView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading) {
             HStack {
                 playlistHeader
                 Spacer()
@@ -352,9 +365,42 @@ struct PlaylistView: View {
             }
             
             if isExpanded {
-                wallpaperGrid
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
+                    ForEach(playlist.wallpapers) { wallpaper in
+                        if let url = wallpaper.fileURL,
+                           let image = NSImage(contentsOf: url) {
+                            Image(nsImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 60, height: 60)
+                                .cornerRadius(6)
+                                .onTapGesture {
+                                    try? wallpaperManager.setWallpaper(from: url)
+                                }
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(Color.blue.opacity(0.5), lineWidth: wallpaperManager.currentWallpaperPath == url.absoluteString ? 2 : 0)
+                                )
+                        }
+                    }
+                    
+                    Button(action: { addPhotosToPlaylist(playlist) }) {
+                        VStack {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 24))
+                            Text("Add")
+                                .font(.caption)
+                        }
+                        .frame(width: 60, height: 60)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .padding(.top, 8)
             }
         }
+        .padding(.vertical, 4)
         .alert("Delete Playlist", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {
                 deletePlaylist(playlist)
@@ -362,36 +408,6 @@ struct PlaylistView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Are you sure you want to delete this playlist?")
-        }
-    }
-    
-    private var wallpaperGrid: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
-            if let updatedPlaylist = wallpaperManager.loadedPlaylists.first(where: { $0.id == playlist.id }) {
-                ForEach(updatedPlaylist.wallpapers) { wallpaper in
-                    if let url = wallpaper.fileURL,
-                       let image = NSImage(contentsOf: url) {
-                        Image(nsImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 60, height: 60)
-                            .cornerRadius(6)
-                    }
-                }
-            }
-            
-            Button(action: { addPhotosToPlaylist(playlist) }) {
-                VStack {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 24))
-                    Text("Add")
-                        .font(.caption)
-                }
-                .frame(width: 60, height: 60)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(6)
-            }
-            .buttonStyle(PlainButtonStyle())
         }
     }
     
