@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct WallpaperItem: Identifiable, Codable {
     let id: UUID
@@ -260,6 +261,8 @@ struct PlaylistView: View {
     let onEdit: (Playlist) -> Void
     @State private var isExpanded: Bool = false
     @State private var showingDeleteAlert = false
+    @State private var draggedItemId: UUID?
+    @State private var dropTargetIndex: Int?
     
     private struct IntervalOption: Identifiable {
         let id = UUID()
@@ -350,6 +353,36 @@ struct PlaylistView: View {
         }
     }
     
+    private func contextMenu(for wallpaper: WallpaperItem) -> some View {
+        Group {
+            Button(action: {
+                if let url = wallpaper.fileURL {
+                    try? wallpaperManager.setWallpaper(from: url)
+                }
+            }) {
+                Label("Set as Wallpaper", systemImage: "photo")
+            }
+            
+            Button(action: {
+                if let url = wallpaper.fileURL {
+                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                }
+            }) {
+                Label("Show in Finder", systemImage: "folder")
+            }
+            
+            Divider()
+            
+            Button(role: .destructive, action: {
+                if let url = wallpaper.fileURL {
+                    wallpaperManager.removeWallpapers([url])
+                }
+            }) {
+                Label("Remove from Playlist", systemImage: "trash")
+            }
+        }
+    }
+    
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
@@ -366,38 +399,54 @@ struct PlaylistView: View {
             
             if isExpanded {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
-                    ForEach(playlist.wallpapers) { wallpaper in
+                    ForEach(Array(playlist.wallpapers.enumerated()), id: \.element.id) { index, wallpaper in
                         if let url = wallpaper.fileURL,
                            let image = NSImage(contentsOf: url) {
-                            Image(nsImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 60, height: 60)
-                                .cornerRadius(6)
-                                .onTapGesture {
-                                    try? wallpaperManager.setWallpaper(from: url)
+                            ZStack {
+                                // Show insertion indicator
+                                if dropTargetIndex == index {
+                                    Rectangle()
+                                        .fill(Color.blue)
+                                        .frame(width: 2)
+                                        .frame(height: 60)
+                                        .position(x: 0, y: 30)
                                 }
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .stroke(Color.blue.opacity(0.5), lineWidth: wallpaperManager.currentWallpaperPath == url.absoluteString ? 2 : 0)
-                                )
+                                
+                                Image(nsImage: image)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 60, height: 60)
+                                    .cornerRadius(6)
+                                    .onTapGesture {
+                                        try? wallpaperManager.setWallpaper(from: url)
+                                    }
+                                    .contextMenu {
+                                        contextMenu(for: wallpaper)
+                                    }
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color.blue.opacity(0.5), 
+                                                   lineWidth: wallpaperManager.currentWallpaperPath == url.absoluteString ? 2 : 0)
+                                    )
+                                    .opacity(draggedItemId == wallpaper.id ? 0.5 : 1.0)
+                                    .draggable(wallpaper.id.uuidString) {
+                                        draggedItemId = wallpaper.id
+                                        return Image(nsImage: image)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 30, height: 30)
+                                            .cornerRadius(4)
+                                    }
+                            }
                         }
                     }
-                    
-                    Button(action: { addPhotosToPlaylist(playlist) }) {
-                        VStack {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 24))
-                            Text("Add")
-                                .font(.caption)
-                        }
-                        .frame(width: 60, height: 60)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(6)
-                    }
-                    .buttonStyle(PlainButtonStyle())
                 }
-                .padding(.top, 8)
+                .onDrop(of: [.text], delegate: PlaylistDropDelegate(
+                    playlist: playlist,
+                    wallpaperManager: wallpaperManager,
+                    draggedItemId: $draggedItemId,
+                    dropTargetIndex: $dropTargetIndex
+                ))
             }
         }
         .padding(.vertical, 4)
@@ -446,6 +495,59 @@ struct PlaylistView: View {
             // Handle error through environment object or callback
             print("Error deleting playlist: \(error.localizedDescription)")
         }
+    }
+}
+
+struct PlaylistDropDelegate: DropDelegate {
+    let playlist: Playlist
+    let wallpaperManager: WallpaperManager
+    @Binding var draggedItemId: UUID?
+    @Binding var dropTargetIndex: Int?
+    
+    func validateDrop(info: DropInfo) -> Bool {
+        return true
+    }
+    
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        // Calculate target index based on drop location
+        let gridItemWidth: CGFloat = 68 // 60 + 8 spacing
+        let row = Int(info.location.y / gridItemWidth)
+        let col = Int(info.location.x / gridItemWidth)
+        let itemsPerRow = Int(info.location.x / gridItemWidth)
+        let targetIndex = (row * itemsPerRow) + col
+        
+        dropTargetIndex = min(targetIndex, playlist.wallpapers.count)
+        return DropProposal(operation: .move)
+    }
+    
+    func dropExited(info: DropInfo) {
+        dropTargetIndex = nil
+    }
+    
+    func performDrop(info: DropInfo) -> Bool {
+        let targetIndex = dropTargetIndex ?? playlist.wallpapers.count
+        dropTargetIndex = nil
+        draggedItemId = nil
+        
+        guard let itemProvider = info.itemProviders(for: [.text]).first else { return false }
+        
+        itemProvider.loadItem(forTypeIdentifier: UTType.text.identifier, options: nil) { (data, error) in
+            guard let data = data as? Data,
+                  let idString = String(data: data, encoding: .utf8),
+                  let sourceId = UUID(uuidString: idString) else {
+                return
+            }
+            
+            DispatchQueue.main.async {
+                for sourcePlaylist in wallpaperManager.loadedPlaylists {
+                    if let sourceIndex = sourcePlaylist.wallpapers.firstIndex(where: { $0.id.uuidString == idString }) {
+                        wallpaperManager.moveWallpaper(from: sourcePlaylist, at: sourceIndex, to: playlist, at: targetIndex)
+                        break
+                    }
+                }
+            }
+        }
+        return true
     }
 }
 
