@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import SwiftUI
 
 enum WallpaperError: Error {
     case invalidScreen
@@ -473,6 +474,21 @@ class WallpaperManager: ObservableObject {
             return nil
         }
         return (wallpaperURL, image)
+    }
+    
+    func moveWallpaper(from sourcePlaylist: Playlist, at sourceIndex: Int, to targetPlaylist: Playlist, at targetIndex: Int) {
+        guard let sourcePlaylistIndex = playlists.firstIndex(where: { $0.id == sourcePlaylist.id }),
+              let targetPlaylistIndex = playlists.firstIndex(where: { $0.id == targetPlaylist.id }) else {
+            return
+        }
+        
+        withAnimation {
+            let wallpaper = playlists[sourcePlaylistIndex].wallpapers.remove(at: sourceIndex)
+            playlists[targetPlaylistIndex].wallpapers.insert(wallpaper, at: targetIndex)
+            
+            try? savePlaylists()
+            updateLoadedPlaylists()
+        }
     }
 }
 
