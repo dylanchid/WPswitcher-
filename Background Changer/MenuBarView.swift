@@ -158,7 +158,8 @@ struct MenuBarView: View {
                 )
             }
         }
-        .frame(width: 730, height: 400)
+        .navigationViewStyle(DoubleColumnNavigationViewStyle())
+        .frame(width: 800, height: 500)  // Set fixed frame size
     }
     
     private var wallpaperPreviewHeader: some View {
@@ -364,6 +365,22 @@ struct SlideshowView: View {
                     guard let url = wallpaper.fileURL else { return }
                     try? wallpaperManager.setWallpaper(from: url)
                 }
+                .onHover { isHovered in
+                    if isHovered {
+                        NSCursor.dragLink.push()  // Show drag cursor on hover
+                    } else {
+                        NSCursor.pop()  // Restore default cursor
+                    }
+                }
+                .gesture(
+                    DragGesture(coordinateSpace: .global)
+                        .onChanged { _ in
+                            NSCursor.closedHand.push()  // Show grabbing cursor while dragging
+                        }
+                        .onEnded { _ in
+                            NSCursor.pop()  // Restore default cursor when drag ends
+                        }
+                )
                 .contextMenu {
                     contextMenu(for: wallpaper)
                 }
@@ -375,6 +392,7 @@ struct SlideshowView: View {
                 .opacity(draggedItemId == wallpaper.id ? 0.5 : 1.0)
                 .draggable(wallpaper.id.uuidString) {
                     draggedItemId = wallpaper.id
+                    NSCursor.closedHand.push()  // Show grabbing cursor when drag starts
                     return Image(nsImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -942,38 +960,14 @@ struct HomeView: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(height: 150)
-                                .frame(maxWidth: 400)
+                                .frame(maxWidth: .infinity)
                                 .cornerRadius(8)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
                                 )
-                            
-                            // Wallpaper Info
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(currentURL.lastPathComponent)
-                                        .font(.subheadline)
-                                        .lineLimit(1)
-                                    
-                                    Button(action: {
-                                        NSWorkspace.shared.activateFileViewerSelecting([currentURL])
-                                    }) {
-                                        Label("Show in Finder", systemImage: "folder")
-                                            .font(.caption)
-                                    }
-                                    .buttonStyle(.link)
-                                }
-                                
-                                Spacer()
-                                
-                                if let dimensions = NSImage(contentsOf: currentURL)?.dimensions {
-                                    Text("\(dimensions.width) × \(dimensions.height)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
                         }
+                        .frame(maxWidth: .infinity)
                         
                         // Right side - Display settings
                         VStack(alignment: .leading, spacing: 12) {
@@ -986,6 +980,7 @@ struct HomeView: View {
                                 }
                             }
                             .pickerStyle(PopUpButtonPickerStyle())
+                            .frame(maxWidth: 200)
                             
                             Toggle("Show on all Spaces", isOn: $wallpaperManager.showOnAllSpaces)
                                 .padding(.vertical, 4)
@@ -998,16 +993,16 @@ struct HomeView: View {
                                 }
                             }
                             .pickerStyle(PopUpButtonPickerStyle())
+                            .frame(maxWidth: 200)
                         }
-                        .frame(width: 250)
+                        .frame(width: 200)
                     }
                     .padding()
+                    .frame(maxWidth: .infinity)
                 }
-                
-                // Empty space for future content
-                Spacer()
-                    .frame(height: 200)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding()
         }
     }
 }

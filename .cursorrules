@@ -1,0 +1,40 @@
+rules:
+  - description: "Do not delete any existing functionality"
+    enforce: true
+    action: "Preserve all functions, structures, and UI elements unless explicitly requested to modify or remove them."
+
+  - description: "Ensure all code is clean and organized"
+    enforce: true
+    action: "Follow Swift best practices, maintain readable formatting, and include relevant comments where necessary."
+
+  - description: "Work with Swift for a macOS menu bar application"
+    enforce: true
+    action: "Ensure all code is specific to macOS development using Swift and AppKit, focusing on NSStatusBar, NSMenu, and other relevant frameworks."
+
+  - description: "Think through each change before making it"
+    enforce: true
+    action: "Before making modifications, analyze the impact of the change and ensure it aligns with the current project structure."
+
+  - description: "Maintain the existing app’s architecture"
+    enforce: true
+    action: "Do not introduce unnecessary changes to the project structure or break the app’s workflow."
+
+  - description: "Ensure UI consistency with macOS standards"
+    enforce: true
+    action: "Follow macOS UI guidelines for menu bar applications, ensuring layout, spacing, and interactions feel native."
+
+  - description: "Keep functionality modular and reusable"
+    enforce: true
+    action: "Encapsulate functionality into classes or extensions where appropriate, avoiding duplication."
+
+  - description: "Write safe and error-handling-aware code"
+    enforce: true
+    action: "Include appropriate error handling for file paths, user input, and system interactions."
+
+  - description: "Do not overwrite or break git versioning"
+    enforce: true
+    action: "Ensure that all changes respect the existing Git structure and do not override branches or uncommitted work."
+
+  - description: "Follow Apple’s Human Interface Guidelines"
+    enforce: true
+    action: "Ensure UI elements match the standard behavior and appearance expected in macOS applications."
