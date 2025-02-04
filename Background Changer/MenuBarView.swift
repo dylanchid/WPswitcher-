@@ -263,11 +263,22 @@ struct PlaylistView: View {
     @State private var showingDeleteAlert = false
     @State private var draggedItemId: UUID?
     @State private var dropTargetIndex: Int?
+    @State private var selectedInterval: IntervalOption?
     
-    private struct IntervalOption: Identifiable {
+    private struct IntervalOption: Identifiable, Hashable {
         let id = UUID()
         let name: String
         let seconds: TimeInterval
+        
+        // Implement Hashable
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
+        }
+        
+        // Implement Equatable (required by Hashable)
+        static func == (lhs: IntervalOption, rhs: IntervalOption) -> Bool {
+            return lhs.id == rhs.id
+        }
     }
     
     private let intervalOptions = [
@@ -325,6 +336,7 @@ struct PlaylistView: View {
                 Text(getCurrentIntervalText())
                     .foregroundColor(.gray)
             }
+
         }
         .disabled(!wallpaperManager.isPlaylistRotating(playlist.id))
     }
@@ -354,7 +366,7 @@ struct PlaylistView: View {
     }
     
     private func contextMenu(for wallpaper: WallpaperItem) -> some View {
-        Group {
+        Menu {
             Button(action: {
                 if let url = wallpaper.fileURL {
                     try? wallpaperManager.setWallpaper(from: url)
@@ -380,7 +392,71 @@ struct PlaylistView: View {
             }) {
                 Label("Remove from Playlist", systemImage: "trash")
             }
+        } label: {
+            EmptyView()
         }
+    }
+    
+    private func wallpaperItemView(wallpaper: WallpaperItem, index: Int) -> some View {
+        Group {
+            if let url = wallpaper.fileURL,
+               let image = NSImage(contentsOf: url) {
+                ZStack {
+                    // Show insertion indicator
+                    if dropTargetIndex == index {
+                        Rectangle()
+                            .fill(Color.blue)
+                            .frame(width: 2)
+                            .frame(height: 60)
+                            .position(x: 0, y: 30)
+                    }
+                    
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .cornerRadius(6)
+                        .onTapGesture {
+                            try? wallpaperManager.setWallpaper(from: url)
+                        }
+                        .contextMenu {
+                            contextMenu(for: wallpaper)
+                        }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color.blue.opacity(0.5), 
+                                       lineWidth: wallpaperManager.currentWallpaperPath == url.absoluteString ? 2 : 0)
+                        )
+                        .opacity(draggedItemId == wallpaper.id ? 0.5 : 1.0)
+                        .draggable(wallpaper.id.uuidString) {
+                            DispatchQueue.main.async {
+                                draggedItemId = wallpaper.id
+                            }
+                            return Image(nsImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 30, height: 30)
+                                .cornerRadius(4)
+                        }
+                }
+                .animation(.easeInOut(duration: 0.2), value: dropTargetIndex)
+            }
+        }
+    }
+    
+    var playlistGridView: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
+            ForEach(Array(playlist.wallpapers.enumerated()), id: \.element.id) { index, wallpaper in
+                wallpaperItemView(wallpaper: wallpaper, index: index)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: dropTargetIndex)
+        .onDrop(of: [.text], delegate: PlaylistDropDelegate(
+            playlist: playlist,
+            wallpaperManager: wallpaperManager,
+            draggedItemId: $draggedItemId,
+            dropTargetIndex: $dropTargetIndex
+        ))
     }
     
     var body: some View {
@@ -388,65 +464,35 @@ struct PlaylistView: View {
             HStack {
                 playlistHeader
                 Spacer()
-                playPauseButton
-                intervalMenu
-                optionsMenu
                 
+                // Replace Menu with a simple toggle button
+                Button(action: {
+                    let newMode: PlaybackMode = playlist.playbackMode == .sequential ? .random : .sequential
+                    wallpaperManager.updatePlaylistPlaybackMode(playlist.id, mode: newMode)
+                }) {
+                    Image(systemName: playlist.playbackMode == .sequential ? "arrow.right" : "shuffle")
+                        .foregroundColor(.blue)
+                        .frame(width: 20, height: 20)
+                }
+                .help(playlist.playbackMode == .sequential ? "Sequential Mode" : "Random Mode")
+                
+                // Interval Picker
+                Picker("", selection: $selectedInterval) {
+                    ForEach(intervalOptions) { option in
+                        Text(option.name).tag(Optional(option))
+                    }
+                }
+                .frame(width: 120)
+                
+                optionsMenu
                 Button(action: { isExpanded.toggle() }) {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                 }
             }
+            .padding(.horizontal)
             
             if isExpanded {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
-                    ForEach(Array(playlist.wallpapers.enumerated()), id: \.element.id) { index, wallpaper in
-                        if let url = wallpaper.fileURL,
-                           let image = NSImage(contentsOf: url) {
-                            ZStack {
-                                // Show insertion indicator
-                                if dropTargetIndex == index {
-                                    Rectangle()
-                                        .fill(Color.blue)
-                                        .frame(width: 2)
-                                        .frame(height: 60)
-                                        .position(x: 0, y: 30)
-                                }
-                                
-                                Image(nsImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 60, height: 60)
-                                    .cornerRadius(6)
-                                    .onTapGesture {
-                                        try? wallpaperManager.setWallpaper(from: url)
-                                    }
-                                    .contextMenu {
-                                        contextMenu(for: wallpaper)
-                                    }
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(Color.blue.opacity(0.5), 
-                                                   lineWidth: wallpaperManager.currentWallpaperPath == url.absoluteString ? 2 : 0)
-                                    )
-                                    .opacity(draggedItemId == wallpaper.id ? 0.5 : 1.0)
-                                    .draggable(wallpaper.id.uuidString) {
-                                        draggedItemId = wallpaper.id
-                                        return Image(nsImage: image)
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 30, height: 30)
-                                            .cornerRadius(4)
-                                    }
-                            }
-                        }
-                    }
-                }
-                .onDrop(of: [.text], delegate: PlaylistDropDelegate(
-                    playlist: playlist,
-                    wallpaperManager: wallpaperManager,
-                    draggedItemId: $draggedItemId,
-                    dropTargetIndex: $dropTargetIndex
-                ))
+                playlistGridView
             }
         }
         .padding(.vertical, 4)
