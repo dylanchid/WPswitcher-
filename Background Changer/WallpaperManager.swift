@@ -87,6 +87,9 @@ class WallpaperManager: ObservableObject {
     
     @Published private(set) var currentWallpaperPath: String = ""
     
+    // Add property to track last random indices
+    private var usedRandomIndices: Set<Int> = []
+    
     // MARK: - Initialization
     private init() {
         fileMonitor = FileMonitor { [weak self] in
@@ -420,12 +423,13 @@ class WallpaperManager: ObservableObject {
     
     // Add these new methods
     func startPlaylistRotation(_ playlist: Playlist, interval: TimeInterval) {
+        stopRotation() // Stop any existing rotation
+        
         activePlaylistId = playlist.id
         playlistRotationInterval = interval
         activePlaylistRotating = true
         
-        stopRotation() // Stop any existing rotation
-        
+        // Start the timer with the specified interval
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             do {
                 try self?.rotatePlaylist()
@@ -434,6 +438,9 @@ class WallpaperManager: ObservableObject {
                 self?.stopPlaylistRotation()
             }
         }
+        
+        // Trigger first rotation immediately
+        try? rotatePlaylist()
     }
     
     func stopPlaylistRotation() {
@@ -453,10 +460,31 @@ class WallpaperManager: ObservableObject {
             throw WallpaperError.invalidURL
         }
         
-        currentIndex = (currentIndex + 1) % playlist.wallpapers.count
+        let nextIndex = getNextIndex(for: playlist)
+        currentIndex = nextIndex
+        
         if let nextWallpaper = playlist.wallpapers[currentIndex].fileURL {
             try setWallpaper(from: nextWallpaper)
             currentWallpaperPath = nextWallpaper.absoluteString
+        }
+    }
+    
+    private func getNextIndex(for playlist: Playlist) -> Int {
+        switch playlist.playbackMode {
+        case .sequential:
+            return (currentIndex + 1) % playlist.wallpapers.count
+        case .random:
+            if usedRandomIndices.count == playlist.wallpapers.count {
+                usedRandomIndices.removeAll()
+            }
+            
+            var randomIndex: Int
+            repeat {
+                randomIndex = Int.random(in: 0..<playlist.wallpapers.count)
+            } while usedRandomIndices.contains(randomIndex)
+            
+            usedRandomIndices.insert(randomIndex)
+            return randomIndex
         }
     }
     
@@ -482,10 +510,20 @@ class WallpaperManager: ObservableObject {
             return
         }
         
-        withAnimation {
-            let wallpaper = playlists[sourcePlaylistIndex].wallpapers.remove(at: sourceIndex)
-            playlists[targetPlaylistIndex].wallpapers.insert(wallpaper, at: targetIndex)
-            
+        let wallpaper = playlists[sourcePlaylistIndex].wallpapers.remove(at: sourceIndex)
+        playlists[targetPlaylistIndex].wallpapers.insert(wallpaper, at: targetIndex)
+        
+        // Perform save operations after animation completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            try? self?.savePlaylists()
+            self?.updateLoadedPlaylists()
+        }
+    }
+    
+    func updatePlaylistPlaybackMode(_ playlistId: UUID, mode: PlaybackMode) {
+        if let index = playlists.firstIndex(where: { $0.id == playlistId }) {
+            playlists[index].playbackMode = mode
+            usedRandomIndices.removeAll()
             try? savePlaylists()
             updateLoadedPlaylists()
         }
