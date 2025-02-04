@@ -23,9 +23,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.target = self
         }
 
-        // Create popover UI
+        // Create popover UI with proper size constraints
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 800, height: 500)
+        popover.contentSize = NSSize(width: 650, height: 400)  // Standard menu bar popover size
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = NSHostingController(rootView: MenuBarView())

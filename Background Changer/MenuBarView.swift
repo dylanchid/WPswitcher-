@@ -159,7 +159,7 @@ struct MenuBarView: View {
             }
         }
         .navigationViewStyle(DoubleColumnNavigationViewStyle())
-        .frame(width: 800, height: 500)  // Set fixed frame size
+        .frame(width: 650, height: 400)  // Set fixed frame size
     }
     
     private var wallpaperPreviewHeader: some View {
