@@ -55,16 +55,16 @@ enum WallpaperManagerError: LocalizedError {
 class WallpaperManager: ObservableObject {
     static let shared = WallpaperManager()
     
-    @Published private(set) var loadedPlaylists: [Playlist] = []
+    @Published private(set) var playlists: [Playlist] = []
     @Published private var wallpapers: [WallpaperItem] = []
     
     // MARK: - Properties
     private var currentIndex = 0
     private var timer: Timer?
-    private var displayMode: DisplayMode = .fillScreen
-    private var showOnAllSpaces: Bool = true
-    private var playlists: [Playlist] = []
-    private let playlistsKey = "savedPlaylists"
+    @Published var displayMode: DisplayMode = .fillScreen
+    @Published var selectedScreen: NSScreen?
+    @Published var showOnAllSpaces: Bool = true
+    private var playlistsKey = "savedPlaylists"
     
     // UserDefaults keys
     private let wallpapersKey = "savedWallpapers"
@@ -202,8 +202,8 @@ class WallpaperManager: ObservableObject {
     }
     
     /// Gets all wallpapers
-    var allWallpapers: [URL] {
-        wallpapers.compactMap { $0.fileURL }
+    var allWallpapers: [WallpaperItem] {
+        playlists.flatMap { $0.wallpapers }
     }
     
     /// Gets current wallpaper
@@ -225,7 +225,6 @@ class WallpaperManager: ObservableObject {
         let newPlaylist = Playlist(name: name)
         playlists.append(newPlaylist)
         try savePlaylists()
-        updateLoadedPlaylists()
     }
     
     /// Adds wallpapers to a playlist
@@ -273,7 +272,6 @@ class WallpaperManager: ObservableObject {
         
         playlists[index].wallpapers.append(contentsOf: validatedWallpapers)
         try savePlaylists()
-        updateLoadedPlaylists()
     }
     
     /// Renames a playlist
@@ -293,7 +291,6 @@ class WallpaperManager: ObservableObject {
         }
         playlists.removeAll(where: { $0.id == id })
         try savePlaylists()
-        updateLoadedPlaylists()
     }
     
     // MARK: - Private Methods
@@ -336,15 +333,12 @@ class WallpaperManager: ObservableObject {
         if let activeId = UserDefaults.standard.string(forKey: activePlaylistKey) {
             activePlaylistId = UUID(uuidString: activeId)
         }
-        
-        updateLoadedPlaylists()
     }
     
     private func loadPlaylists() {
         if let data = UserDefaults.standard.data(forKey: playlistsKey),
            let decoded = try? JSONDecoder().decode([Playlist].self, from: data) {
             playlists = decoded
-            updateLoadedPlaylists()
         }
     }
     
@@ -369,8 +363,6 @@ class WallpaperManager: ObservableObject {
             } else {
                 UserDefaults.standard.removeObject(forKey: activePlaylistKey)
             }
-            
-            updateLoadedPlaylists()
         } catch {
             throw WallpaperManagerError.persistenceError
         }
@@ -418,7 +410,7 @@ class WallpaperManager: ObservableObject {
     
     // Update loadedPlaylists whenever playlists change
     private func updateLoadedPlaylists() {
-        loadedPlaylists = playlists
+        // This method is no longer needed
     }
     
     // Add these new methods
@@ -516,7 +508,6 @@ class WallpaperManager: ObservableObject {
         // Perform save operations after animation completes
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             try? self?.savePlaylists()
-            self?.updateLoadedPlaylists()
         }
     }
     
@@ -525,7 +516,6 @@ class WallpaperManager: ObservableObject {
             playlists[index].playbackMode = mode
             usedRandomIndices.removeAll()
             try? savePlaylists()
-            updateLoadedPlaylists()
         }
     }
 }

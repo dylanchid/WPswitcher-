@@ -37,7 +37,9 @@ struct WallpaperItem: Identifiable, Codable {
 }
 
 struct MenuBarView: View {
-    @State public var selectedImagePath: String = ""
+    @StateObject var wallpaperManager: WallpaperManager = WallpaperManager.shared
+    @State private var selectedNavigation: NavigationItem? = .home
+    @State private var selectedImagePath: String = ""
     @State public var rotationInterval: Double = 60
     @State public var isRotating: Bool = false
     @State public var showOnAllSpaces: Bool = true
@@ -51,7 +53,12 @@ struct MenuBarView: View {
     @State private var showingError = false
     @State private var playlistPreviews: [UUID: PlaylistPreview] = [:]
     
-    @StateObject private var wallpaperManager = WallpaperManager.shared
+    enum NavigationItem: String, Hashable {
+        case home = "Home"
+        case playlists = "Playlists"
+        case allPhotos = "All Photos"
+        case settings = "Settings"
+    }
     
     init() {
         _wallpaperManager = StateObject(wrappedValue: WallpaperManager.shared)
@@ -62,52 +69,42 @@ struct MenuBarView: View {
     }
     
     var body: some View {
-        List {
-            // Header Section
-            Section {
-                if !selectedImagePath.isEmpty {
-                    wallpaperPreviewHeader
+        NavigationView {
+            // Sidebar
+            List(selection: $selectedNavigation) {
+                Section {
+                    NavigationLink(tag: .home, selection: $selectedNavigation) {
+                        HomeView(wallpaperManager: wallpaperManager)
+                    } label: {
+                        Label("Home", systemImage: "house")
+                    }
+                    
+                    NavigationLink(tag: .playlists, selection: $selectedNavigation) {
+                        PlaylistsView(wallpaperManager: wallpaperManager)
+                    } label: {
+                        Label("Playlists", systemImage: "music.note.list")
+                    }
+                    
+                    NavigationLink(tag: .allPhotos, selection: $selectedNavigation) {
+                        AllPhotosView(wallpaperManager: wallpaperManager)
+                    } label: {
+                        Label("All Photos", systemImage: "photo.on.rectangle")
+                    }
+                    
+                    NavigationLink(tag: .settings, selection: $selectedNavigation) {
+                        SettingsView(wallpaperManager: wallpaperManager)
+                    } label: {
+                        Label("Settings", systemImage: "gear")
+                    }
                 }
             }
+            .listStyle(SidebarListStyle())
+            .frame(minWidth: 150, maxWidth: 200)
             
-            // Display Options Section
-            Section {
-                displayOptionsView
-            }
-            
-            // Playlists Section
-            Section(header: HStack {
-                Text("Playlists")
-                Spacer()
-                addPlaylistButton
-            }) {
-                ForEach(wallpaperManager.loadedPlaylists) { playlist in
-                    PlaylistView(wallpaperManager: wallpaperManager, playlist: playlist, onEdit: { startEditingPlaylist($0) })
-                }
-            }
-            
-            // Your Photos section becomes "All Photos"
-            Section(header: Text("All Photos")) {
-                wallpaperCollectionGrid
-            }
-            
-            // Rotation Settings Section
-            Section(header: Text("Rotation Settings")) {
-                rotationSettingsView
-            }
+            // Default content view
+            HomeView(wallpaperManager: wallpaperManager)
         }
-        .listStyle(InsetListStyle())
-        .frame(width: 530, height: 400)
-        .alert("Error", isPresented: $showingError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "An unknown error occurred")
-        }
-        .onReceive(wallpaperManager.$currentWallpaperPath) { newPath in
-            if !newPath.isEmpty {
-                selectedImagePath = newPath
-            }
-        }
+        .frame(width: 730, height: 400)
     }
     
     private var wallpaperPreviewHeader: some View {
@@ -142,11 +139,24 @@ struct MenuBarView: View {
     
     private var displayOptionsView: some View {
         VStack(alignment: .leading) {
-            Picker("Display", selection: $selectedDisplay) {
-                Text("All Displays").tag("All Displays")
-                // Add additional displays as needed
+            Picker("Display Mode", selection: $wallpaperManager.displayMode) {
+                ForEach(DisplayMode.allCases, id: \.self) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
             }
-            .pickerStyle(PopUpButtonPickerStyle())
+            .pickerStyle(SegmentedPickerStyle())
+            
+            Toggle("Show on all Spaces", isOn: $wallpaperManager.showOnAllSpaces)
+        }
+    }
+    
+    private var displaySelectionView: some View {
+        Picker("Display", selection: $wallpaperManager.selectedScreen) {
+            Text("All Displays").tag(Optional<NSScreen>.none)
+            ForEach(NSScreen.screens, id: \.self) { screen in
+                Text("Display \(NSScreen.screens.firstIndex(of: screen)! + 1)")
+                    .tag(Optional(screen))
+            }
         }
     }
     
@@ -593,7 +603,7 @@ struct PlaylistDropDelegate: DropDelegate {
             }
             
             DispatchQueue.main.async {
-                for sourcePlaylist in wallpaperManager.loadedPlaylists {
+                for sourcePlaylist in wallpaperManager.playlists {
                     if let sourceIndex = sourcePlaylist.wallpapers.firstIndex(where: { $0.id.uuidString == idString }) {
                         wallpaperManager.moveWallpaper(from: sourcePlaylist, at: sourceIndex, to: playlist, at: targetIndex)
                         break
@@ -644,5 +654,211 @@ extension MenuBarView {
                 }
             }
         }
+    }
+}
+
+// Separate view for Playlists
+struct PlaylistsView: View {
+    @ObservedObject var wallpaperManager: WallpaperManager
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 8) {
+                ForEach(wallpaperManager.playlists) { playlist in
+                    PlaylistView(
+                        wallpaperManager: wallpaperManager, 
+                        playlist: playlist,
+                        onEdit: { playlist in
+                            // Handle edit action
+                            startEditingPlaylist(playlist)
+                        }
+                    )
+                }
+            }
+            .padding()
+        }
+    }
+    
+    private func startEditingPlaylist(_ playlist: Playlist) {
+        // Implementation of playlist editing
+        print("Editing playlist: \(playlist.name)")
+    }
+}
+
+// Separate view for All Photos
+struct AllPhotosView: View {
+    @ObservedObject var wallpaperManager: WallpaperManager
+    
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
+                ForEach(wallpaperManager.allWallpapers) { wallpaper in
+                    WallpaperThumbnailView(wallpaper: wallpaper)
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+// Separate view for Settings
+struct SettingsView: View {
+    @StateObject var wallpaperManager: WallpaperManager = WallpaperManager.shared
+    @State private var rotationInterval: Double = 60
+    @State private var isRotating: Bool = false
+    
+    var body: some View {
+        Form {
+            Toggle("Auto-rotate wallpapers", isOn: $isRotating)
+                .onChange(of: isRotating) { newValue in
+                    if newValue {
+                        wallpaperManager.startRotation(interval: rotationInterval)
+                    } else {
+                        wallpaperManager.stopRotation()
+                    }
+                }
+            
+            if isRotating {
+                VStack(alignment: .leading) {
+                    Text("Change every: \(Int(rotationInterval)) seconds")
+                    Slider(value: $rotationInterval, in: 10...3600, step: 10)
+                }
+            }
+        }
+        .padding()
+    }
+}
+
+struct WallpaperThumbnailView: View {
+    let wallpaper: WallpaperItem
+    @StateObject var wallpaperManager: WallpaperManager = WallpaperManager.shared
+    
+    var body: some View {
+        if let url = wallpaper.fileURL,
+           let image = NSImage(contentsOf: url) {
+            Image(nsImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 60, height: 60)
+                .cornerRadius(6)
+                .onTapGesture {
+                    try? wallpaperManager.setWallpaper(from: url)
+                }
+                .contextMenu {
+                    Button(action: {
+                        try? wallpaperManager.setWallpaper(from: url)
+                    }) {
+                        Label("Set as Wallpaper", systemImage: "photo")
+                    }
+                    
+                    Button(action: {
+                        NSWorkspace.shared.activateFileViewerSelecting([url])
+                    }) {
+                        Label("Show in Finder", systemImage: "folder")
+                    }
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.blue.opacity(0.5),
+                               lineWidth: wallpaperManager.currentWallpaperPath == url.absoluteString ? 2 : 0)
+                )
+        }
+    }
+}
+
+// Add HomeView
+struct HomeView: View {
+    @ObservedObject var wallpaperManager: WallpaperManager
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // Current Wallpaper Preview with Settings
+                if let (currentURL, currentImage) = wallpaperManager.getCurrentSystemWallpaper() {
+                    HStack(alignment: .top, spacing: 20) {
+                        // Left side - Wallpaper preview
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Current Wallpaper")
+                                .font(.headline)
+                            
+                            Image(nsImage: currentImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(height: 150)
+                                .frame(maxWidth: 400)
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                )
+                            
+                            // Wallpaper Info
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(currentURL.lastPathComponent)
+                                        .font(.subheadline)
+                                        .lineLimit(1)
+                                    
+                                    Button(action: {
+                                        NSWorkspace.shared.activateFileViewerSelecting([currentURL])
+                                    }) {
+                                        Label("Show in Finder", systemImage: "folder")
+                                            .font(.caption)
+                                    }
+                                    .buttonStyle(.link)
+                                }
+                                
+                                Spacer()
+                                
+                                if let dimensions = NSImage(contentsOf: currentURL)?.dimensions {
+                                    Text("\(dimensions.width) × \(dimensions.height)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        
+                        // Right side - Display settings
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Display Settings")
+                                .font(.headline)
+                            
+                            Picker("Display Mode", selection: $wallpaperManager.displayMode) {
+                                ForEach(DisplayMode.allCases, id: \.self) { mode in
+                                    Text(mode.rawValue).tag(mode)
+                                }
+                            }
+                            .pickerStyle(PopUpButtonPickerStyle())
+                            
+                            Toggle("Show on all Spaces", isOn: $wallpaperManager.showOnAllSpaces)
+                                .padding(.vertical, 4)
+                            
+                            Picker("Display", selection: $wallpaperManager.selectedScreen) {
+                                Text("All Displays").tag(Optional<NSScreen>.none)
+                                ForEach(NSScreen.screens, id: \.self) { screen in
+                                    Text("Display \(NSScreen.screens.firstIndex(of: screen)! + 1)")
+                                        .tag(Optional(screen))
+                                }
+                            }
+                            .pickerStyle(PopUpButtonPickerStyle())
+                        }
+                        .frame(width: 250)
+                    }
+                    .padding()
+                }
+                
+                // Empty space for future content
+                Spacer()
+                    .frame(height: 200)
+            }
+        }
+    }
+}
+
+// Add extension for NSImage dimensions
+extension NSImage {
+    var dimensions: (width: Int, height: Int)? {
+        guard let firstRepresentation = representations.first else { return nil }
+        return (Int(firstRepresentation.pixelsWide), Int(firstRepresentation.pixelsHigh))
     }
 }
