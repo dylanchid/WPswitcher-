@@ -30,32 +30,38 @@ public enum DisplayMode: String, CaseIterable {
 }
 
 enum WallpaperManagerError: LocalizedError {
-    case playlistNotFound
+    case slideshowNotFound
     case invalidWallpaperURL
-    case playlistLimitExceeded
-    case duplicatePlaylistName
+    case slideshowLimitExceeded
+    case duplicateSlideshowName
     case persistenceError
     
     var errorDescription: String? {
         switch self {
-        case .playlistNotFound:
-            return "Playlist not found"
+        case .slideshowNotFound:
+            return "Slideshow not found"
         case .invalidWallpaperURL:
             return "Invalid wallpaper URL"
-        case .playlistLimitExceeded:
-            return "Maximum number of playlists reached"
-        case .duplicatePlaylistName:
-            return "A playlist with this name already exists"
+        case .slideshowLimitExceeded:
+            return "Maximum number of slideshows reached"
+        case .duplicateSlideshowName:
+            return "A slideshow with this name already exists"
         case .persistenceError:
             return "Failed to save data"
         }
     }
 }
 
+struct ErrorAlert: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
+}
+
 class WallpaperManager: ObservableObject {
     static let shared = WallpaperManager()
     
-    @Published private(set) var playlists: [Playlist] = []
+    @Published private(set) var slideshows: [Slideshow] = []
     @Published private var wallpapers: [WallpaperItem] = []
     
     // MARK: - Properties
@@ -64,7 +70,7 @@ class WallpaperManager: ObservableObject {
     @Published var displayMode: DisplayMode = .fillScreen
     @Published var selectedScreen: NSScreen?
     @Published var showOnAllSpaces: Bool = true
-    private var playlistsKey = "savedPlaylists"
+    private var slideshowsKey = "savedSlideshows"
     
     // UserDefaults keys
     private let wallpapersKey = "savedWallpapers"
@@ -73,22 +79,28 @@ class WallpaperManager: ObservableObject {
     private let currentIndexKey = "currentIndex"
     
     // Add to existing properties
-    private let maxPlaylists = 20
+    private let maxSlideshows = 20
     
     private var fileMonitor: FileMonitor?
     
     // Add new properties
-    private var activePlaylistId: UUID?
-    private let activePlaylistKey = "activePlaylist"
+    private var activeSlideshowId: UUID?
+    private let activeSlideshowKey = "activeSlideshow"
     
     // Add to properties section
-    @Published private var activePlaylistRotating: Bool = false
-    private var playlistRotationInterval: TimeInterval = 60
+    @Published private var activeSlideshowRotating: Bool = false
+    private var slideshowRotationInterval: TimeInterval = 60
     
     @Published private(set) var currentWallpaperPath: String = ""
     
     // Add property to track last random indices
     private var usedRandomIndices: Set<Int> = []
+    
+    @Published var currentError: ErrorAlert?
+    
+    // Add new properties
+    @Published var isRotating: Bool = false
+    @Published var rotationInterval: TimeInterval = 60
     
     // MARK: - Initialization
     private init() {
@@ -148,15 +160,17 @@ class WallpaperManager: ObservableObject {
     
     /// Starts wallpaper rotation
     func startRotation(interval: TimeInterval) {
-        guard !wallpapers.isEmpty else { return }
+        rotationInterval = interval
+        isRotating = true
+        activeSlideshowRotating = true
         
-        stopRotation()
+        timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
             do {
-                try self?.rotateToNext()
+                try self.rotateToNext()
             } catch {
-                print("Error rotating wallpaper: \(error.localizedDescription)")
-                self?.stopRotation() // Stop rotation if we encounter an error
+                self.handleError(error)
             }
         }
     }
@@ -165,6 +179,8 @@ class WallpaperManager: ObservableObject {
     func stopRotation() {
         timer?.invalidate()
         timer = nil
+        isRotating = false
+        activeSlideshowRotating = false
     }
     
     /// Adds new wallpapers to the rotation
@@ -201,9 +217,14 @@ class WallpaperManager: ObservableObject {
         saveWallpapers()
     }
     
-    /// Gets all wallpapers
+    /// Gets all unique wallpapers
     var allWallpapers: [WallpaperItem] {
-        playlists.flatMap { $0.wallpapers }
+        let allWallpapers = slideshows.flatMap { $0.wallpapers }
+        // Create a dictionary keyed by path to keep only unique wallpapers
+        let uniqueWallpapers = Dictionary(grouping: allWallpapers) { $0.path }
+            .compactMapValues { $0.first }
+            .values
+        return Array(uniqueWallpapers)
     }
     
     /// Gets current wallpaper
@@ -212,28 +233,27 @@ class WallpaperManager: ObservableObject {
         return wallpapers[currentIndex].fileURL
     }
     
-    /// Creates a new playlist
-    func createPlaylist(name: String) throws {
-        guard playlists.count < maxPlaylists else {
-            throw WallpaperManagerError.playlistLimitExceeded
+    /// Creates a new slideshow
+    func createSlideshow(name: String) throws {
+        guard slideshows.count < maxSlideshows else {
+            throw WallpaperManagerError.slideshowLimitExceeded
         }
         
-        guard !playlists.contains(where: { $0.name == name }) else {
-            throw WallpaperManagerError.duplicatePlaylistName
+        guard !slideshows.contains(where: { $0.name == name }) else {
+            throw WallpaperManagerError.duplicateSlideshowName
         }
         
-        let newPlaylist = Playlist(name: name)
-        playlists.append(newPlaylist)
-        try savePlaylists()
+        let newSlideshow = Slideshow(name: name)
+        slideshows.append(newSlideshow)
+        try saveSlideshows()
     }
     
-    /// Adds wallpapers to a playlist
-    func addWallpapersToPlaylist(_ wallpapers: [WallpaperItem], playlistId: UUID) throws {
-        guard let index = playlists.firstIndex(where: { $0.id == playlistId }) else {
-            throw WallpaperManagerError.playlistNotFound
+    /// Adds wallpapers to a slideshow
+    func addWallpapersToSlideshow(_ wallpapers: [WallpaperItem], slideshowId: UUID) throws {
+        guard let index = slideshows.firstIndex(where: { $0.id == slideshowId }) else {
+            throw WallpaperManagerError.slideshowNotFound
         }
         
-        // Validate and copy files to app's documents directory if needed
         let validatedWallpapers = try wallpapers.map { wallpaper -> WallpaperItem in
             guard let sourceURL = wallpaper.fileURL else {
                 throw WallpaperManagerError.invalidWallpaperURL
@@ -270,52 +290,67 @@ class WallpaperManager: ObservableObject {
             )
         }
         
-        playlists[index].wallpapers.append(contentsOf: validatedWallpapers)
-        try savePlaylists()
+        slideshows[index].wallpapers.append(contentsOf: validatedWallpapers)
+        try saveSlideshows()
     }
     
-    /// Renames a playlist
-    func renamePlaylist(id: UUID, newName: String) throws {
-        if let index = playlists.firstIndex(where: { $0.id == id }) {
-            playlists[index].name = newName
-            try savePlaylists()
+    /// Renames a slideshow
+    func renameSlideshow(id: UUID, newName: String) throws {
+        if let index = slideshows.firstIndex(where: { $0.id == id }) {
+            slideshows[index].name = newName
+            try saveSlideshows()
         } else {
-            throw WallpaperManagerError.playlistNotFound
+            throw WallpaperManagerError.slideshowNotFound
         }
     }
     
-    /// Deletes a playlist
-    func deletePlaylist(id: UUID) throws {
-        guard playlists.contains(where: { $0.id == id }) else {
-            throw WallpaperManagerError.playlistNotFound
+    /// Deletes a slideshow
+    func deleteSlideshow(id: UUID) throws {
+        guard slideshows.contains(where: { $0.id == id }) else {
+            throw WallpaperManagerError.slideshowNotFound
         }
-        playlists.removeAll(where: { $0.id == id })
-        try savePlaylists()
+        slideshows.removeAll(where: { $0.id == id })
+        try saveSlideshows()
     }
     
     // MARK: - Private Methods
     
     private func rotateToNext() throws {
-        if let playlistId = activePlaylistId,
-           let playlist = playlists.first(where: { $0.id == playlistId }),
-           !playlist.wallpapers.isEmpty {
-            currentIndex = (currentIndex + 1) % playlist.wallpapers.count
-            if let nextWallpaper = playlist.wallpapers[currentIndex].fileURL {
-                try setWallpaper(from: nextWallpaper)
+        if let slideshowId = activeSlideshowId,
+           let slideshow = slideshows.first(where: { $0.id == slideshowId }),
+           !slideshow.wallpapers.isEmpty {
+            
+            let nextIndex: Int
+            
+            // Calculate next index based on playback mode
+            if slideshow.playbackMode == .sequential {
+                nextIndex = (currentIndex + 1) % slideshow.wallpapers.count
+            } else { // random mode
+                if usedRandomIndices.count == slideshow.wallpapers.count {
+                    usedRandomIndices.removeAll()
+                }
+                
+                var randomIndex: Int
+                repeat {
+                    randomIndex = Int.random(in: 0..<slideshow.wallpapers.count)
+                } while usedRandomIndices.contains(randomIndex)
+                
+                usedRandomIndices.insert(randomIndex)
+                nextIndex = randomIndex
             }
-        } else {
-            guard !wallpapers.isEmpty else { return }
-            currentIndex = (currentIndex + 1) % wallpapers.count
-            if let nextWallpaper = wallpapers[currentIndex].fileURL {
+            
+            currentIndex = nextIndex
+            if let nextWallpaper = slideshow.wallpapers[currentIndex].fileURL {
                 try setWallpaper(from: nextWallpaper)
+                currentWallpaperPath = nextWallpaper.absoluteString
             }
         }
         saveCurrentIndex()
     }
     
     private func loadSavedData() {
-        // Load playlists
-        loadPlaylists()
+        // Load slideshows
+        loadSlideshows()
         
         // Load all photos
         if let data = UserDefaults.standard.data(forKey: wallpapersKey),
@@ -329,16 +364,16 @@ class WallpaperManager: ObservableObject {
             }
         }
         
-        // Load active playlist
-        if let activeId = UserDefaults.standard.string(forKey: activePlaylistKey) {
-            activePlaylistId = UUID(uuidString: activeId)
+        // Load active slideshow
+        if let activeId = UserDefaults.standard.string(forKey: activeSlideshowKey) {
+            activeSlideshowId = UUID(uuidString: activeId)
         }
     }
     
-    private func loadPlaylists() {
-        if let data = UserDefaults.standard.data(forKey: playlistsKey),
-           let decoded = try? JSONDecoder().decode([Playlist].self, from: data) {
-            playlists = decoded
+    private func loadSlideshows() {
+        if let data = UserDefaults.standard.data(forKey: slideshowsKey),
+           let decoded = try? JSONDecoder().decode([Slideshow].self, from: data) {
+            slideshows = decoded
         }
     }
     
@@ -352,18 +387,11 @@ class WallpaperManager: ObservableObject {
         UserDefaults.standard.set(currentIndex, forKey: currentIndexKey)
     }
     
-    private func savePlaylists() throws {
-        do {
-            let encoded = try JSONEncoder().encode(playlists)
-            UserDefaults.standard.set(encoded, forKey: playlistsKey)
-            
-            // Save active playlist
-            if let activeId = activePlaylistId {
-                UserDefaults.standard.set(activeId.uuidString, forKey: activePlaylistKey)
-            } else {
-                UserDefaults.standard.removeObject(forKey: activePlaylistKey)
-            }
-        } catch {
+    private func saveSlideshows() throws {
+        let encoder = JSONEncoder()
+        if let encoded = try? encoder.encode(slideshows) {
+            UserDefaults.standard.set(encoded, forKey: slideshowsKey)
+        } else {
             throw WallpaperManagerError.persistenceError
         }
     }
@@ -373,8 +401,12 @@ class WallpaperManager: ObservableObject {
     }
     
     private func handleError(_ error: Error) {
-        print("Error: \(error.localizedDescription)")
-        // You could implement a delegate pattern here for better error handling
+        DispatchQueue.main.async {
+            self.currentError = ErrorAlert(
+                title: "Error",
+                message: error.localizedDescription
+            )
+        }
     }
     
     func setWallpaperSafely(from url: URL) {
@@ -398,9 +430,9 @@ class WallpaperManager: ObservableObject {
         saveWallpapers()
     }
     
-    func setActivePlaylist(_ playlistId: UUID?) {
-        activePlaylistId = playlistId
-        UserDefaults.standard.set(playlistId?.uuidString, forKey: activePlaylistKey)
+    func setActiveSlideshow(_ slideshowId: UUID?) {
+        activeSlideshowId = slideshowId
+        UserDefaults.standard.set(slideshowId?.uuidString, forKey: activeSlideshowKey)
         
         // Reset rotation if active
         if timer != nil {
@@ -408,71 +440,71 @@ class WallpaperManager: ObservableObject {
         }
     }
     
-    // Update loadedPlaylists whenever playlists change
-    private func updateLoadedPlaylists() {
+    // Update loadedSlideshows whenever slideshows change
+    private func updateLoadedSlideshows() {
         // This method is no longer needed
     }
     
     // Add these new methods
-    func startPlaylistRotation(_ playlist: Playlist, interval: TimeInterval) {
+    func startSlideshowRotation(_ slideshow: Slideshow, interval: TimeInterval) {
         stopRotation() // Stop any existing rotation
         
-        activePlaylistId = playlist.id
-        playlistRotationInterval = interval
-        activePlaylistRotating = true
+        activeSlideshowId = slideshow.id
+        slideshowRotationInterval = interval
+        activeSlideshowRotating = true
         
         // Start the timer with the specified interval
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             do {
-                try self?.rotatePlaylist()
+                try self?.rotateSlideshow()
             } catch {
-                print("Error rotating playlist: \(error.localizedDescription)")
-                self?.stopPlaylistRotation()
+                print("Error rotating slideshow: \(error.localizedDescription)")
+                self?.stopSlideshowRotation()
             }
         }
         
         // Trigger first rotation immediately
-        try? rotatePlaylist()
+        try? rotateSlideshow()
     }
     
-    func stopPlaylistRotation() {
-        activePlaylistRotating = false
+    func stopSlideshowRotation() {
+        activeSlideshowRotating = false
         stopRotation()
     }
     
-    func isPlaylistRotating(_ playlistId: UUID) -> Bool {
-        return activePlaylistId == playlistId && activePlaylistRotating
+    func isSlideshowRotating(_ slideshowId: UUID) -> Bool {
+        return activeSlideshowId == slideshowId && activeSlideshowRotating
     }
     
-    func rotatePlaylist() throws {
-        guard let playlistId = activePlaylistId,
-              let playlist = playlists.first(where: { $0.id == playlistId }),
-              !playlist.wallpapers.isEmpty else {
-            stopPlaylistRotation()
+    func rotateSlideshow() throws {
+        guard let slideshowId = activeSlideshowId,
+              let slideshow = slideshows.first(where: { $0.id == slideshowId }),
+              !slideshow.wallpapers.isEmpty else {
+            stopSlideshowRotation()
             throw WallpaperError.invalidURL
         }
         
-        let nextIndex = getNextIndex(for: playlist)
+        let nextIndex = getNextIndex(for: slideshow)
         currentIndex = nextIndex
         
-        if let nextWallpaper = playlist.wallpapers[currentIndex].fileURL {
+        if let nextWallpaper = slideshow.wallpapers[currentIndex].fileURL {
             try setWallpaper(from: nextWallpaper)
             currentWallpaperPath = nextWallpaper.absoluteString
         }
     }
     
-    private func getNextIndex(for playlist: Playlist) -> Int {
-        switch playlist.playbackMode {
+    private func getNextIndex(for slideshow: Slideshow) -> Int {
+        switch slideshow.playbackMode {
         case .sequential:
-            return (currentIndex + 1) % playlist.wallpapers.count
+            return (currentIndex + 1) % slideshow.wallpapers.count
         case .random:
-            if usedRandomIndices.count == playlist.wallpapers.count {
+            if usedRandomIndices.count == slideshow.wallpapers.count {
                 usedRandomIndices.removeAll()
             }
             
             var randomIndex: Int
             repeat {
-                randomIndex = Int.random(in: 0..<playlist.wallpapers.count)
+                randomIndex = Int.random(in: 0..<slideshow.wallpapers.count)
             } while usedRandomIndices.contains(randomIndex)
             
             usedRandomIndices.insert(randomIndex)
@@ -480,9 +512,9 @@ class WallpaperManager: ObservableObject {
         }
     }
     
-    func getCurrentRotationInterval(for playlistId: UUID) -> TimeInterval {
-        if activePlaylistId == playlistId {
-            return playlistRotationInterval
+    func getCurrentRotationInterval(for slideshowId: UUID) -> TimeInterval {
+        if activeSlideshowId == slideshowId {
+            return slideshowRotationInterval
         }
         return 60 // Default interval
     }
@@ -496,26 +528,26 @@ class WallpaperManager: ObservableObject {
         return (wallpaperURL, image)
     }
     
-    func moveWallpaper(from sourcePlaylist: Playlist, at sourceIndex: Int, to targetPlaylist: Playlist, at targetIndex: Int) {
-        guard let sourcePlaylistIndex = playlists.firstIndex(where: { $0.id == sourcePlaylist.id }),
-              let targetPlaylistIndex = playlists.firstIndex(where: { $0.id == targetPlaylist.id }) else {
+    func moveWallpaper(from sourceSlideshow: Slideshow, at sourceIndex: Int, to targetSlideshow: Slideshow, at targetIndex: Int) {
+        guard let sourceSlideshowIndex = slideshows.firstIndex(where: { $0.id == sourceSlideshow.id }),
+              let targetSlideshowIndex = slideshows.firstIndex(where: { $0.id == targetSlideshow.id }) else {
             return
         }
         
-        let wallpaper = playlists[sourcePlaylistIndex].wallpapers.remove(at: sourceIndex)
-        playlists[targetPlaylistIndex].wallpapers.insert(wallpaper, at: targetIndex)
+        let wallpaper = slideshows[sourceSlideshowIndex].wallpapers.remove(at: sourceIndex)
+        slideshows[targetSlideshowIndex].wallpapers.insert(wallpaper, at: targetIndex)
         
         // Perform save operations after animation completes
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            try? self?.savePlaylists()
+            try? self?.saveSlideshows()
         }
     }
     
-    func updatePlaylistPlaybackMode(_ playlistId: UUID, mode: PlaybackMode) {
-        if let index = playlists.firstIndex(where: { $0.id == playlistId }) {
-            playlists[index].playbackMode = mode
+    func updateSlideshowPlaybackMode(_ slideshowId: UUID, mode: PlaybackMode) {
+        if let index = slideshows.firstIndex(where: { $0.id == slideshowId }) {
+            slideshows[index].playbackMode = mode
             usedRandomIndices.removeAll()
-            try? savePlaylists()
+            try? saveSlideshows()
         }
     }
 }
