@@ -62,44 +62,42 @@ struct MenuBarView: View {
     }
     
     var body: some View {
-        NavigationView {
-            List {
-                // Header Section
-                Section {
-                    if !selectedImagePath.isEmpty {
-                        wallpaperPreviewHeader
-                    }
-                }
-                
-                // Display Options Section
-                Section {
-                    displayOptionsView
-                }
-                
-                // Playlists Section
-                Section(header: HStack {
-                    Text("Playlists")
-                    Spacer()
-                    addPlaylistButton
-                }) {
-                    ForEach(wallpaperManager.loadedPlaylists) { playlist in
-                        PlaylistView(wallpaperManager: wallpaperManager, playlist: playlist, onEdit: { startEditingPlaylist($0) })
-                    }
-                }
-                
-                // Your Photos section becomes "All Photos"
-                Section(header: Text("All Photos")) {
-                    wallpaperCollectionGrid
-                }
-                
-                // Rotation Settings Section
-                Section(header: Text("Rotation Settings")) {
-                    rotationSettingsView
+        List {
+            // Header Section
+            Section {
+                if !selectedImagePath.isEmpty {
+                    wallpaperPreviewHeader
                 }
             }
-            .listStyle(InsetListStyle())
-            .frame(width: 480, height: 640)
+            
+            // Display Options Section
+            Section {
+                displayOptionsView
+            }
+            
+            // Playlists Section
+            Section(header: HStack {
+                Text("Playlists")
+                Spacer()
+                addPlaylistButton
+            }) {
+                ForEach(wallpaperManager.loadedPlaylists) { playlist in
+                    PlaylistView(wallpaperManager: wallpaperManager, playlist: playlist, onEdit: { startEditingPlaylist($0) })
+                }
+            }
+            
+            // Your Photos section becomes "All Photos"
+            Section(header: Text("All Photos")) {
+                wallpaperCollectionGrid
+            }
+            
+            // Rotation Settings Section
+            Section(header: Text("Rotation Settings")) {
+                rotationSettingsView
+            }
         }
+        .listStyle(InsetListStyle())
+        .frame(width: 530, height: 400)
         .alert("Error", isPresented: $showingError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -465,16 +463,25 @@ struct PlaylistView: View {
                 playlistHeader
                 Spacer()
                 
-                // Replace Menu with a simple toggle button
-                Button(action: {
-                    let newMode: PlaybackMode = playlist.playbackMode == .sequential ? .random : .sequential
-                    wallpaperManager.updatePlaylistPlaybackMode(playlist.id, mode: newMode)
-                }) {
+                // Playback Mode Menu
+                Menu {
+                    ForEach(PlaybackMode.allCases, id: \.self) { mode in
+                        Button(action: {
+                            wallpaperManager.updatePlaylistPlaybackMode(playlist.id, mode: mode)
+                        }) {
+                            HStack {
+                                Image(systemName: mode == .sequential ? "arrow.right" : "shuffle")
+                                Text(mode.rawValue)
+                                if playlist.playbackMode == mode {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
                     Image(systemName: playlist.playbackMode == .sequential ? "arrow.right" : "shuffle")
                         .foregroundColor(.blue)
-                        .frame(width: 20, height: 20)
                 }
-                .help(playlist.playbackMode == .sequential ? "Sequential Mode" : "Random Mode")
                 
                 // Interval Picker
                 Picker("", selection: $selectedInterval) {
@@ -484,6 +491,7 @@ struct PlaylistView: View {
                 }
                 .frame(width: 120)
                 
+                // Existing buttons
                 optionsMenu
                 Button(action: { isExpanded.toggle() }) {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
