@@ -1,5 +1,21 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
+
+struct VisualEffectView: NSViewRepresentable {
+    var material: NSVisualEffectView.Material
+    var blendingMode: NSVisualEffectView.BlendingMode
+    
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = blendingMode
+        view.state = .active
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) { }
+}
 
 struct WallpaperItem: Identifiable, Codable {
     let id: UUID
@@ -36,48 +52,6 @@ struct WallpaperItem: Identifiable, Codable {
     }
 }
 
-struct Slideshow: Identifiable, Codable {
-    let id: UUID
-    var name: String
-    var wallpapers: [WallpaperItem]
-    var playbackMode: PlaybackMode
-    
-    init(id: UUID = UUID(), name: String, wallpapers: [WallpaperItem] = [], playbackMode: PlaybackMode = .sequential) {
-        self.id = id
-        self.name = name
-        self.wallpapers = wallpapers
-        self.playbackMode = playbackMode
-    }
-}
-
-struct SlideshowPreview: View {
-    let image: NSImage
-    let name: String
-    let wallpaperCount: Int
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(nsImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 100, height: 100)
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
-                )
-            
-            Text(name)
-                .font(.caption)
-                .lineLimit(1)
-            
-            Text("\(wallpaperCount) photos")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
 struct MenuBarView: View {
     @StateObject var wallpaperManager: WallpaperManager = WallpaperManager.shared
     @State private var selectedNavigation: NavigationItem? = .home
@@ -88,16 +62,16 @@ struct MenuBarView: View {
     @State public var selectedDisplay: String = "All Displays"
     @State public var wallpapers: [WallpaperItem] = []
     @State public var displayMode: DisplayMode = .fillScreen
-    @State private var slideshows: [Slideshow] = []
-    @State private var editingSlideshowId: UUID?
-    @State private var editingSlideshowName: String = ""
+    @State private var playlists: [Playlist] = []
+    @State private var editingPlaylistId: UUID?
+    @State private var editingPlaylistName: String = ""
     @State private var errorMessage: String?
     @State private var showingError = false
-    @State private var slideshowPreviews: [UUID: SlideshowPreview] = [:]
+    @State private var playlistPreviews: [UUID: PlaylistPreviewData] = [:]
     
     enum NavigationItem: String, Hashable {
         case home = "Home"
-        case slideshows = "Slideshows"
+        case playlists = "Playlists"
         case allPhotos = "All Photos"
         case settings = "Settings"
     }
@@ -112,49 +86,89 @@ struct MenuBarView: View {
     
     var body: some View {
         NavigationView {
-            // Sidebar
+        // Sidebar with translucent background
+        ZStack {
+            VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
             List(selection: $selectedNavigation) {
                 Section {
                     NavigationLink(tag: .home, selection: $selectedNavigation) {
                         HomeView(wallpaperManager: wallpaperManager)
                     } label: {
                         Label("Home", systemImage: "house")
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.primary)
                     }
                     
-                    NavigationLink(tag: .slideshows, selection: $selectedNavigation) {
-                        SlideshowsView(wallpaperManager: wallpaperManager)
+                    NavigationLink(tag: .playlists, selection: $selectedNavigation) {
+                        PlaylistsView(wallpaperManager: wallpaperManager)
                     } label: {
-                        Label("Slideshows", systemImage: "play.square.stack")
+                        Label("Playlists", systemImage: "play.square.stack")
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.primary)
                     }
                     
                     NavigationLink(tag: .allPhotos, selection: $selectedNavigation) {
                         AllPhotosView(wallpaperManager: wallpaperManager)
                     } label: {
                         Label("All Photos", systemImage: "photo.on.rectangle")
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.primary)
                     }
                     
                     NavigationLink(tag: .settings, selection: $selectedNavigation) {
                         SettingsView(wallpaperManager: wallpaperManager)
                     } label: {
                         Label("Settings", systemImage: "gear")
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.primary)
                     }
                 }
             }
             .listStyle(SidebarListStyle())
             .frame(minWidth: 150, maxWidth: 200)
+        }
             
-            // Default content view
-            HomeView(wallpaperManager: wallpaperManager)
+        // Default content view
+        HomeView(wallpaperManager: wallpaperManager)
+
+        // Bottom Tab Bar
+        VStack {
+            Spacer()
+            HStack {
+                Button { selectedNavigation = .home } label: {
+                    Label("Home", systemImage: "house")
+                        .font(.title3.weight(.semibold))
+                        .foregroundColor(.primary)
+                }
+                Spacer()
+                Button { selectedNavigation = .playlists } label: {
+                    Label("Playlists", systemImage: "play.square.stack")
+                        .font(.title3.weight(.semibold))
+                        .foregroundColor(.primary)
+                }
+                Spacer()
+                Button { selectedNavigation = .settings } label: {
+                    Label("Settings", systemImage: "gear")
+                        .font(.title3.weight(.semibold))
+                        .foregroundColor(.primary)
+                }
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .padding(.horizontal)
+        }
+        .frame(maxHeight: .infinity, alignment: .bottom)
             
             // Update preview references
-            if let slideshow = wallpaperManager.slideshows.first,
-               let firstWallpaper = slideshow.wallpapers.first,
+            if let playlist = wallpaperManager.playlists.first,
+               let firstWallpaper = playlist.wallpapers.first,
                let fileURL = firstWallpaper.fileURL,
                let image = NSImage(contentsOf: fileURL) {
-                SlideshowPreview(
+                PlaylistPreview(
                     image: image,
-                    name: slideshow.name,
-                    wallpaperCount: slideshow.wallpapers.count
+                    name: playlist.name,
+                    wallpaperCount: playlist.wallpapers.count
                 )
             }
         }
@@ -304,11 +318,11 @@ struct MenuBarView: View {
                                 name: url.lastPathComponent,
                                 isSelected: false
                             )
-                            // Add to the first slideshow if none exists
-                            if let firstSlideshow = wallpaperManager.slideshows.first {
-                                try? wallpaperManager.addWallpapersToSlideshow(
+                            // Add to the first playlist if none exists
+                            if let firstPlaylist = wallpaperManager.playlists.first {
+                                try? wallpaperManager.addWallpapersToPlaylist(
                                     [wallpaper],
-                                    slideshowId: firstSlideshow.id
+                                    playlistId: firstPlaylist.id
                                 )
                             }
                             url.stopAccessingSecurityScopedResource()
@@ -325,10 +339,10 @@ struct MenuBarView: View {
 }
 
 // MARK: - Subviews
-struct SlideshowView: View {
+struct PlaylistView: View {
     @ObservedObject var wallpaperManager: WallpaperManager
-    let slideshow: Slideshow
-    let onEdit: (Slideshow) -> Void
+    let playlist: Playlist
+    let onEdit: (Playlist) -> Void
     
     @State private var isExpanded: Bool = true
     @State private var showingDeleteAlert = false
@@ -338,7 +352,7 @@ struct SlideshowView: View {
     @State private var rotationInterval: Double = 60
     
     private var wallpaperGridItem: some View {
-        ForEach(Array(slideshow.wallpapers.enumerated()), id: \.element.id) { index, wallpaper in
+        ForEach(Array(playlist.wallpapers.enumerated()), id: \.element.id) { index, wallpaper in
             if let url = wallpaper.fileURL,
                let image = NSImage(contentsOf: url) {
                 wallpaperThumbnail(image: image, wallpaper: wallpaper, index: index)
@@ -364,49 +378,42 @@ struct SlideshowView: View {
                 .onTapGesture {
                     guard let url = wallpaper.fileURL else { return }
                     try? wallpaperManager.setWallpaper(from: url)
+                    wallpaperManager.setActivePlaylist(playlist.id)
                 }
                 .onHover { isHovered in
                     if isHovered {
-                        NSCursor.dragLink.push()  // Show drag cursor on hover
+                        NSCursor.dragLink.push()
                     } else {
-                        NSCursor.pop()  // Restore default cursor
+                        NSCursor.pop()
                     }
                 }
                 .gesture(
                     DragGesture(coordinateSpace: .global)
                         .onChanged { _ in
-                            NSCursor.closedHand.push()  // Show grabbing cursor while dragging
+                            NSCursor.closedHand.push()
                         }
                         .onEnded { _ in
-                            NSCursor.pop()  // Restore default cursor when drag ends
+                            NSCursor.pop()
                         }
                 )
-                .contextMenu {
-                    contextMenu(for: wallpaper)
-                }
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.blue.opacity(0.5), 
-                               lineWidth: wallpaper.fileURL?.absoluteString == wallpaperManager.currentWallpaperPath ? 2 : 0)
-                )
-                .opacity(draggedItemId == wallpaper.id ? 0.5 : 1.0)
                 .draggable(wallpaper.id.uuidString) {
                     draggedItemId = wallpaper.id
-                    NSCursor.closedHand.push()  // Show grabbing cursor when drag starts
+                    NSCursor.closedHand.push()
                     return Image(nsImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 30, height: 30)
                         .cornerRadius(4)
                 }
+            .opacity(draggedItemId == wallpaper.id ? 0.5 : 1.0)
         }
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                Text(slideshow.name)
+                Text(playlist.name)
                     .font(.headline)
                 
                 Spacer()
@@ -424,7 +431,7 @@ struct SlideshowView: View {
                         if wallpaperManager.isRotating {
                             wallpaperManager.stopRotation()
                         } else {
-                            wallpaperManager.startSlideshowRotation(slideshow, interval: 60)
+                            wallpaperManager.startPlaylistRotation(playlist, interval: 60)
                         }
                     }) {
                         Image(systemName: wallpaperManager.isRotating ? "pause.circle" : "play.circle")
@@ -433,9 +440,9 @@ struct SlideshowView: View {
                     
                     Menu {
                         Picker("Playback Mode", selection: Binding(
-                            get: { slideshow.playbackMode },
+                            get: { playlist.playbackMode },
                             set: { newValue in
-                                wallpaperManager.updateSlideshowPlaybackMode(slideshow.id, mode: newValue)
+                                wallpaperManager.updatePlaylistPlaybackMode(playlist.id, mode: newValue)
                             }
                         )) {
                             Text("Sequential").tag(PlaybackMode.sequential)
@@ -445,7 +452,7 @@ struct SlideshowView: View {
                         Image(systemName: "gear")
                     }
                     
-                    Button(action: { onEdit(slideshow) }) {
+                    Button(action: { onEdit(playlist) }) {
                         Image(systemName: "pencil")
                     }
                     
@@ -463,17 +470,57 @@ struct SlideshowView: View {
             }
             
             if isExpanded {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
-                    wallpaperGridItem
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 8) {
+                    ForEach(playlist.wallpapers) { wallpaper in
+                        if let url = wallpaper.fileURL,
+                           let image = NSImage(contentsOf: url) {
+                            Image(nsImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 100, height: 100)
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                )
+                                .opacity(draggedItemId == wallpaper.id ? 0.5 : 1.0)
+                                .draggable(wallpaper.id.uuidString) {
+                                    draggedItemId = wallpaper.id
+                                    return Image(nsImage: image)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 50, height: 50)
+                                        .cornerRadius(4)
+                                }
+                        }
+                    }
                 }
-                .onDrop(of: [.text], delegate: SlideshowDropDelegate(
-                    slideshow: slideshow,
-                    wallpaperManager: wallpaperManager,
-                    draggedItemId: $draggedItemId,
-                    dropTargetIndex: $dropTargetIndex
-                ))
+                .padding(.top, 8)
+                .dropDestination(for: String.self) { items, location in
+                    guard let droppedId = items.first,
+                          let sourceIndex = playlist.wallpapers.firstIndex(where: { $0.id.uuidString == droppedId }) else {
+                        return false
+                    }
+                    
+                    let targetIndex = dropTargetIndex ?? playlist.wallpapers.count
+                    wallpaperManager.moveWallpaper(
+                        from: playlist,
+                        at: sourceIndex,
+                        to: playlist,
+                        at: targetIndex
+                    )
+                    
+                    dropTargetIndex = nil
+                    draggedItemId = nil
+                    return true
+                } isTargeted: { isTargeted in
+                    dropTargetIndex = isTargeted ? playlist.wallpapers.count : nil
+                }
             }
         }
+        .padding()
+        .background(Color(.windowBackgroundColor))
+        .cornerRadius(8)
         .fileImporter(
             isPresented: $showingImagePicker,
             allowedContentTypes: [.image],
@@ -489,9 +536,9 @@ struct SlideshowView: View {
                             name: url.lastPathComponent,
                             isSelected: false
                         )
-                        try? wallpaperManager.addWallpapersToSlideshow(
+                        try? wallpaperManager.addWallpapersToPlaylist(
                             [wallpaper],
-                            slideshowId: slideshow.id
+                            playlistId: playlist.id
                         )
                         url.stopAccessingSecurityScopedResource()
                     }
@@ -500,13 +547,13 @@ struct SlideshowView: View {
                 print("Error selecting images: \(error.localizedDescription)")
             }
         }
-        .alert("Delete Slideshow", isPresented: $showingDeleteAlert) {
+        .alert("Delete Playlist", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {
-                try? wallpaperManager.deleteSlideshow(id: slideshow.id)
+                try? wallpaperManager.deletePlaylist(id: playlist.id)
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to delete this slideshow? This action cannot be undone.")
+            Text("Are you sure you want to delete this playlist? This action cannot be undone.")
         }
     }
     
@@ -542,14 +589,14 @@ struct SlideshowView: View {
                 guard let url = wallpaper.fileURL else { return }
                 wallpaperManager.removeWallpapers([url])
             }) {
-                Label("Remove from Slideshow", systemImage: "trash")
+                Label("Remove from Playlist", systemImage: "trash")
             }
         }
     }
 }
 
-struct SlideshowDropDelegate: DropDelegate {
-    let slideshow: Slideshow
+struct PlaylistDropDelegate: DropDelegate {
+    let playlist: Playlist
     let wallpaperManager: WallpaperManager
     @Binding var draggedItemId: UUID?
     @Binding var dropTargetIndex: Int?
@@ -566,7 +613,7 @@ struct SlideshowDropDelegate: DropDelegate {
         let itemsPerRow = Int(info.location.x / gridItemWidth)
         let targetIndex = (row * itemsPerRow) + col
         
-        dropTargetIndex = min(targetIndex, slideshow.wallpapers.count)
+        dropTargetIndex = min(targetIndex, playlist.wallpapers.count)
         return DropProposal(operation: .move)
     }
     
@@ -575,7 +622,7 @@ struct SlideshowDropDelegate: DropDelegate {
     }
     
     func performDrop(info: DropInfo) -> Bool {
-        let targetIndex = dropTargetIndex ?? slideshow.wallpapers.count
+        let targetIndex = dropTargetIndex ?? playlist.wallpapers.count
         dropTargetIndex = nil
         draggedItemId = nil
         
@@ -588,9 +635,9 @@ struct SlideshowDropDelegate: DropDelegate {
             }
             
             DispatchQueue.main.async {
-                for sourceSlideshow in wallpaperManager.slideshows {
-                    if let sourceIndex = sourceSlideshow.wallpapers.firstIndex(where: { $0.id.uuidString == idString }) {
-                        wallpaperManager.moveWallpaper(from: sourceSlideshow, at: sourceIndex, to: slideshow, at: targetIndex)
+                for sourcePlaylist in wallpaperManager.playlists {
+                    if let sourceIndex = sourcePlaylist.wallpapers.firstIndex(where: { $0.id.uuidString == idString }) {
+                        wallpaperManager.moveWallpaper(from: sourcePlaylist, at: sourceIndex, to: playlist, at: targetIndex)
                         break
                     }
                 }
@@ -602,36 +649,36 @@ struct SlideshowDropDelegate: DropDelegate {
 
 // MARK: - Extensions
 extension MenuBarView {
-    private func startEditingSlideshow(_ slideshow: Slideshow) {
-        editingSlideshowId = slideshow.id
-        editingSlideshowName = slideshow.name
+    private func startEditingPlaylist(_ playlist: Playlist) {
+        editingPlaylistId = playlist.id
+        editingPlaylistName = playlist.name
     }
     
-    private var addSlideshowButton: some View {
-        Button(action: createNewSlideshow) {
-            Label("New Slideshow", systemImage: "plus")
+    private var addPlaylistButton: some View {
+        Button(action: createNewPlaylist) {
+            Label("New Playlist", systemImage: "plus")
         }
     }
     
-    private func createNewSlideshow() {
+    private func createNewPlaylist() {
         let alert = NSAlert()
-        alert.messageText = "Create New Slideshow"
-        alert.informativeText = "Enter a name for your new slideshow:"
+        alert.messageText = "Create New Playlist"
+        alert.informativeText = "Enter a name for your new playlist:"
         alert.alertStyle = .informational
         alert.addButton(withTitle: "Create")
         alert.addButton(withTitle: "Cancel")
         
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
         input.stringValue = ""
-        input.placeholderString = "Slideshow Name"
+        input.placeholderString = "Playlist Name"
         alert.accessoryView = input
         
         if let window = NSApp.windows.first(where: { $0.isKeyWindow }) {
             alert.beginSheetModal(for: window) { response in
                 if response == .alertFirstButtonReturn {
-                    let slideshowName = input.stringValue.isEmpty ? "New Slideshow" : input.stringValue
+                    let playlistName = input.stringValue.isEmpty ? "New Playlist" : input.stringValue
                     do {
-                        try wallpaperManager.createSlideshow(name: slideshowName)
+                        try wallpaperManager.createPlaylist(name: playlistName)
                     } catch {
                         errorMessage = error.localizedDescription
                         showingError = true
@@ -642,12 +689,12 @@ extension MenuBarView {
     }
 }
 
-// Add this new view for slideshow creation
-struct CreateSlideshowView: View {
+// Add this new view for playlist creation
+struct CreatePlaylistView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var wallpaperManager: WallpaperManager
     
-    @State private var slideshowName: String = ""
+    @State private var playlistName: String = ""
     @State private var duration: Double = 60
     @State private var playbackMode: PlaybackMode = .sequential
     @State private var showError = false
@@ -655,10 +702,10 @@ struct CreateSlideshowView: View {
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("Create New Slideshow")
+            Text("Create New Playlist")
                 .font(.headline)
             
-            TextField("Slideshow Name", text: $slideshowName)
+            TextField("Playlist Name", text: $playlistName)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .frame(width: 250)
             
@@ -693,7 +740,7 @@ struct CreateSlideshowView: View {
                 }
                 
                 Button("Create") {
-                    createSlideshow()
+                    createPlaylist()
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -707,15 +754,15 @@ struct CreateSlideshowView: View {
         }
     }
     
-    private func createSlideshow() {
-        guard !slideshowName.isEmpty else {
+    private func createPlaylist() {
+        guard !playlistName.isEmpty else {
             showError = true
-            errorMessage = "Please enter a slideshow name"
+            errorMessage = "Please enter a playlist name"
             return
         }
         
         do {
-            try wallpaperManager.createSlideshow(name: slideshowName)
+            try wallpaperManager.createPlaylist(name: playlistName)
             dismiss()
         } catch {
             showError = true
@@ -724,22 +771,22 @@ struct CreateSlideshowView: View {
     }
 }
 
-// Update SlideshowsView to include the create button
-struct SlideshowsView: View {
+// Update PlaylistsView to include the create button
+struct PlaylistsView: View {
     @ObservedObject var wallpaperManager: WallpaperManager
     @State private var showingCreateSheet = false
-    @State private var editingSlideshow: Slideshow? = nil
+    @State private var editingPlaylist: Playlist? = nil
     
     var body: some View {
         VStack {
             HStack {
-                Text("Slideshows")
+                Text("Playlists")
                     .font(.headline)
                 
                 Spacer()
                 
                 Button(action: { showingCreateSheet = true }) {
-                    Label("New Slideshow", systemImage: "plus")
+                    Label("New Playlist", systemImage: "plus")
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -747,12 +794,12 @@ struct SlideshowsView: View {
             
             ScrollView {
                 VStack(spacing: 8) {
-                    ForEach(wallpaperManager.slideshows) { slideshow in
-                        SlideshowView(
+                    ForEach(wallpaperManager.playlists) { playlist in
+                        PlaylistView(
                             wallpaperManager: wallpaperManager,
-                            slideshow: slideshow,
-                            onEdit: { slideshow in
-                                editingSlideshow = slideshow
+                            playlist: playlist,
+                            onEdit: { playlist in
+                                editingPlaylist = playlist
                             }
                         )
                     }
@@ -761,40 +808,40 @@ struct SlideshowsView: View {
             }
         }
         .sheet(isPresented: $showingCreateSheet) {
-            CreateSlideshowView(wallpaperManager: wallpaperManager)
+            CreatePlaylistView(wallpaperManager: wallpaperManager)
         }
-        .sheet(item: $editingSlideshow) { slideshow in
-            EditSlideshowView(wallpaperManager: wallpaperManager, slideshow: slideshow)
+        .sheet(item: $editingPlaylist) { playlist in
+            EditPlaylistView(wallpaperManager: wallpaperManager, playlist: playlist)
         }
     }
 }
 
-// Add EditSlideshowView
-struct EditSlideshowView: View {
+// Add EditPlaylistView
+struct EditPlaylistView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var wallpaperManager: WallpaperManager
-    let slideshow: Slideshow
+    let playlist: Playlist
     
-    @State private var slideshowName: String
+    @State private var playlistName: String
     @State private var duration: Double
     @State private var playbackMode: PlaybackMode
     @State private var showError = false
     @State private var errorMessage = ""
     
-    init(wallpaperManager: WallpaperManager, slideshow: Slideshow) {
+    init(wallpaperManager: WallpaperManager, playlist: Playlist) {
         self.wallpaperManager = wallpaperManager
-        self.slideshow = slideshow
-        _slideshowName = State(initialValue: slideshow.name)
+        self.playlist = playlist
+        _playlistName = State(initialValue: playlist.name)
         _duration = State(initialValue: 60)
-        _playbackMode = State(initialValue: slideshow.playbackMode)
+        _playbackMode = State(initialValue: playlist.playbackMode)
     }
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("Edit Slideshow")
+            Text("Edit Playlist")
                 .font(.headline)
             
-            TextField("Slideshow Name", text: $slideshowName)
+            TextField("Playlist Name", text: $playlistName)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .frame(width: 250)
             
@@ -844,14 +891,14 @@ struct EditSlideshowView: View {
     }
     
     private func saveChanges() {
-        guard !slideshowName.isEmpty else {
+        guard !playlistName.isEmpty else {
             showError = true
-            errorMessage = "Please enter a slideshow name"
+            errorMessage = "Please enter a playlist name"
             return
         }
         
         do {
-            try wallpaperManager.renameSlideshow(id: slideshow.id, newName: slideshowName)
+            try wallpaperManager.renamePlaylist(id: playlist.id, newName: playlistName)
             dismiss()
         } catch {
             showError = true
@@ -1014,3 +1061,4 @@ extension NSImage {
         return (Int(firstRepresentation.pixelsWide), Int(firstRepresentation.pixelsHigh))
     }
 }
+

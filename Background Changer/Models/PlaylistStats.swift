@@ -1,5 +1,6 @@
 import Foundation
 
+// Import Playlist model
 struct PlaylistStats: Codable {
     let totalWallpapers: Int
     let totalSize: Int64
