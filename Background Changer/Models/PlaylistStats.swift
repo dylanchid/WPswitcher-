@@ -1,5 +1,6 @@
 import Foundation
 
+// Import Playlist model
 struct PlaylistStats: Codable {
     let totalWallpapers: Int
     let totalSize: Int64
@@ -11,7 +12,7 @@ struct PlaylistStats: Codable {
         
         for wallpaper in playlist.wallpapers {
             if let url = wallpaper.fileURL,
-               let resourceValues = try? url.resourceValues(forKeys: [.fileSizeKey]),
+               let resourceValues = try? url.resourceValues(forKeys: [URLResourceKey.fileSizeKey]),
                let fileSize = resourceValues.fileSize {
                 totalSize += Int64(fileSize)
             }

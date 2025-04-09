@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct MainAppView: View {
     @State private var selectedImagePath: String = ""
     @State private var rotationInterval: Double = 60 // Default: Change wallpaper every 60 seconds
     @State private var isRotating: Bool = false
