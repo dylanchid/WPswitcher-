@@ -8,85 +8,190 @@
 import SwiftUI
 
 struct MainAppView: View {
-    @State private var selectedImagePath: String = ""
-    @State private var rotationInterval: Double = 60 // Default: Change wallpaper every 60 seconds
-    @State private var isRotating: Bool = false
-    private let wallpaperManager = WallpaperManager.shared
-
+    @EnvironmentObject var wallpaperManager: WallpaperManager
+    @EnvironmentObject var themeManager: ThemeManager
+    @State private var selectedTab = 0
+    
     var body: some View {
-        VStack {
-            Text("Wallpaper Changer")
-                .font(.largeTitle)
-                .padding()
-
-            // Select Image Button
-            Button("Select Image") {
-                selectImage()
-            }
-            .padding()
+        NavigationView {
+            SidebarView()
+                .frame(minWidth: 200)
             
-            if !selectedImagePath.isEmpty {
-                Text("Selected: \(selectedImagePath)")
-                    .font(.caption)
-                    .padding()
-
-                // Set Wallpaper Button
-                Button("Set Wallpaper") {
-                    if let url = URL(string: selectedImagePath) {
-                        try? wallpaperManager.setWallpaper(from: url)
-                        wallpaperManager.addWallpapers([url])
+            TabView(selection: $selectedTab) {
+                WallpaperGridView()
+                    .tabItem {
+                        Label("Wallpapers", systemImage: "photo")
                     }
-                }
-                .padding()
-            }
-            
-            Divider().padding(.vertical)
-
-            // Rotation Interval Slider
-            VStack {
-                Text("Rotation Interval: \(Int(rotationInterval)) sec")
-                    .font(.headline)
-                Slider(value: $rotationInterval, in: 10...600, step: 10) // 10s to 10 min
-                    .padding()
-            }
-
-            // Start/Stop Rotation Buttons
-            HStack {
-                Button(isRotating ? "Stop Rotation" : "Start Rotation") {
-                    if isRotating {
-                        wallpaperManager.stopRotation()
-                    } else {
-                        wallpaperManager.startRotation(interval: rotationInterval)
+                    .tag(0)
+                
+                PlaylistView()
+                    .tabItem {
+                        Label("Playlists", systemImage: "list.bullet")
                     }
-                    isRotating.toggle()
-                }
-                .padding()
-                .background(isRotating ? Color.red : Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(8)
-
-                Button("Clear Rotation List") {
-                    wallpaperManager.clearWallpapers()
-                }
-                .padding()
-                .background(Color.gray)
-                .foregroundColor(.white)
-                .cornerRadius(8)
+                    .tag(1)
+                
+                SettingsView()
+                    .tabItem {
+                        Label("Settings", systemImage: "gear")
+                    }
+                    .tag(2)
             }
         }
-        .frame(width: 450, height: 300)
-        .padding()
+        .themedBackground()
+        .environment(\.colorScheme, themeManager.theme.colorScheme == .dark ? .dark : .light)
     }
+}
 
-    /// Opens file picker to select an image
-    func selectImage() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.image]
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
+struct SidebarView: View {
+    @EnvironmentObject var wallpaperManager: WallpaperManager
+    @EnvironmentObject var themeManager: ThemeManager
+    
+    var body: some View {
+        List {
+            Section(header: Text("Library").themedText()) {
+                NavigationLink(destination: WallpaperGridView()) {
+                    Label("All Wallpapers", systemImage: "photo")
+                        .themedText()
+                }
+                
+                NavigationLink(destination: PlaylistView()) {
+                    Label("Playlists", systemImage: "list.bullet")
+                        .themedText()
+                }
+            }
+            
+            Section(header: Text("Playlists").themedText()) {
+                ForEach(wallpaperManager.userProfile.playlists) { playlist in
+                    NavigationLink(destination: PlaylistDetailView(playlist: playlist)) {
+                        HStack {
+                            Text(playlist.name)
+                                .themedText()
+                            Spacer()
+                            Text("\(playlist.wallpapers.count)")
+                                .themedSecondaryText()
+                                .font(.caption)
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(SidebarListStyle())
+        .themedBackground()
+    }
+}
 
-        if panel.runModal() == .OK {
-            selectedImagePath = panel.url?.path ?? ""
+struct WallpaperGridView: View {
+    @EnvironmentObject var wallpaperManager: WallpaperManager
+    @EnvironmentObject var themeManager: ThemeManager
+    @State private var searchText = ""
+    
+    var filteredWallpapers: [WallpaperItem] {
+        if searchText.isEmpty {
+            return wallpaperManager.wallpapers
+        } else {
+            return wallpaperManager.wallpapers.filter { wallpaper in
+                wallpaper.name.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
+    var body: some View {
+        VStack {
+            SearchBar(text: $searchText)
+                .padding()
+            
+            ScrollView {
+                LazyVGrid(columns: [
+                    GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)
+                ], spacing: 16) {
+                    ForEach(filteredWallpapers) { wallpaper in
+                        WallpaperThumbnailView(wallpaper: wallpaper)
+                            .themedBorder()
+                    }
+                }
+                .padding()
+            }
+        }
+        .themedBackground()
+    }
+}
+
+struct SearchBar: View {
+    @Binding var text: String
+    @EnvironmentObject var themeManager: ThemeManager
+    
+    var body: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(themeManager.theme.secondaryTextColor)
+            
+            TextField("Search", text: $text)
+                .textFieldStyle(PlainTextFieldStyle())
+                .themedText()
+            
+            if !text.isEmpty {
+                Button(action: {
+                    text = ""
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(themeManager.theme.secondaryTextColor)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(8)
+        .background(themeManager.theme.backgroundColor)
+        .cornerRadius(8)
+        .themedBorder()
+    }
+}
+
+struct WallpaperThumbnailView: View {
+    let wallpaper: WallpaperItem
+    @EnvironmentObject var themeManager: ThemeManager
+    @State private var isHovered = false
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            AsyncImage(url: URL(fileURLWithPath: wallpaper.filePath)) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                        .frame(height: 150)
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 150)
+                        .clipped()
+                case .failure:
+                    Image(systemName: "photo")
+                        .frame(height: 150)
+                @unknown default:
+                    EmptyView()
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(wallpaper.name)
+                    .themedText()
+                    .lineLimit(1)
+                
+                Text(wallpaper.filePath)
+                    .themedSecondaryText()
+                    .font(.caption)
+                    .lineLimit(1)
+            }
+            .padding(8)
+        }
+        .background(themeManager.theme.backgroundColor)
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(themeManager.theme.borderColor, lineWidth: isHovered ? 2 : 1)
+        )
+        .onHover { hovering in
+            isHovered = hovering
         }
     }
 }

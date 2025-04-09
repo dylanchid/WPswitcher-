@@ -7,23 +7,25 @@ struct PlaylistPreview: View {
     let previewData: PlaylistPreviewData
     
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(previewData.previewImages.prefix(3), id: \.self) { image in
-                Image(nsImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 30, height: 30)
-                    .cornerRadius(4)
-            }
-            
+        VStack(alignment: .leading, spacing: 8) {
             Text(playlist.name)
-                .lineLimit(1)
+                .font(.headline)
             
-            if previewData.isActive {
-                Image(systemName: "checkmark")
-                    .foregroundColor(.green)
+            HStack(spacing: 4) {
+                ForEach(previewData.previewImages.prefix(3), id: \.self) { image in
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 30, height: 30)
+                        .cornerRadius(4)
+                }
+                
+                if previewData.isActive {
+                    Image(systemName: "checkmark")
+                        .foregroundColor(.green)
+                }
             }
+            .frame(height: 35)
         }
-        .frame(height: 35)
     }
 } 

@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import SwiftUI
+import Error
 
 // MARK: - Playlist Model
 struct Playlist: Identifiable, Codable {
@@ -42,47 +43,68 @@ struct Playlist: Identifiable, Codable {
     }
 }
 
-// MARK: - Wallpaper Item Model
-struct WallpaperItem: Identifiable, Codable {
+// MARK: - Wallpaper Models
+
+/// Represents a wallpaper item in the application
+struct WallpaperItem: Identifiable, Codable, Equatable {
     let id: UUID
-    let path: String
+    let path: URL
     let name: String
-    var isSelected: Bool
+    var metadata: WallpaperMetadata?
     
-    init(id: UUID = UUID(), path: String, name: String, isSelected: Bool = false) {
+    init(id: UUID = UUID(), path: URL, name: String? = nil) {
         self.id = id
         self.path = path
-        self.name = name
-        self.isSelected = isSelected
+        self.name = name ?? path.lastPathComponent
     }
     
-    enum CodingKeys: String, CodingKey {
-        case id, path, name
-        // Don't persist selection state
+    /// Loads metadata for the wallpaper if available
+    mutating func loadMetadata() {
+        self.metadata = try? WallpaperMetadata.load(from: path)
     }
     
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        path = try container.decode(String.self, forKey: .path)
-        name = try container.decode(String.self, forKey: .name)
-        isSelected = false
+    /// Loads the wallpaper image
+    func loadImage() -> NSImage? {
+        return NSImage(contentsOf: path)
     }
     
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(path, forKey: .path)
-        try container.encode(name, forKey: .name)
-        // Don't encode isSelected state
+    static func == (lhs: WallpaperItem, rhs: WallpaperItem) -> Bool {
+        return lhs.id == rhs.id && lhs.path == rhs.path
     }
+}
+
+/// Stores metadata information about a wallpaper
+struct WallpaperMetadata: Codable {
+    let creationDate: Date?
+    let fileSize: Int64
+    let dimensions: CGSize?
+    let colorSpace: String?
+    let dpi: (x: Double, y: Double)?
     
-    var fileURL: URL? {
-        if path.hasPrefix("file://") {
-            return URL(string: path)
-        } else {
-            return URL(fileURLWithPath: path)
+    static func load(from url: URL) throws -> WallpaperMetadata {
+        let resourceValues = try url.resourceValues(forKeys: [
+            .creationDateKey,
+            .fileSizeKey
+        ])
+        
+        if let image = NSImage(contentsOf: url) {
+            let rep = image.representations.first as? NSBitmapImageRep
+            return WallpaperMetadata(
+                creationDate: resourceValues.creationDate,
+                fileSize: Int64(resourceValues.fileSize ?? 0),
+                dimensions: image.size,
+                colorSpace: rep?.colorSpaceName.rawValue,
+                dpi: rep.map { (x: $0.pixelsWide.double, y: $0.pixelsHigh.double) }
+            )
         }
+        
+        return WallpaperMetadata(
+            creationDate: resourceValues.creationDate,
+            fileSize: Int64(resourceValues.fileSize ?? 0),
+            dimensions: nil,
+            colorSpace: nil,
+            dpi: nil
+        )
     }
 }
 
@@ -116,12 +138,6 @@ public enum DisplayMode: String, CaseIterable {
 }
 
 // MARK: - Error Types
-enum WallpaperError: Error {
-    case invalidScreen
-    case invalidURL
-    case setWallpaperFailed(String)
-}
-
 enum WallpaperManagerError: Error {
     case invalidURL
     case invalidImage
@@ -162,5 +178,67 @@ struct PlaylistPreviewData: Identifiable {
         self.id = id
         self.previewImages = previewImages
         self.isActive = isActive
+    }
+}
+
+// MARK: - App State
+
+/// Manages the global state of the application
+final class AppState: ObservableObject {
+    @Published var wallpapers: [WallpaperItem] = []
+    @Published var selectedWallpaper: WallpaperItem?
+    @Published var isLoading: Bool = false
+    @Published var error: Error?
+    
+    static let shared = AppState()
+    
+    private init() {}
+    
+    func addWallpaper(_ wallpaper: WallpaperItem) {
+        if !wallpapers.contains(where: { $0.id == wallpaper.id }) {
+            wallpapers.append(wallpaper)
+        }
+    }
+    
+    func removeWallpaper(_ wallpaper: WallpaperItem) {
+        wallpapers.removeAll(where: { $0.id == wallpaper.id })
+        if selectedWallpaper?.id == wallpaper.id {
+            selectedWallpaper = nil
+        }
+    }
+}
+
+// MARK: - Theme Management
+
+/// Manages theme settings for the application
+final class ThemeManager: ObservableObject {
+    @Published var isDarkMode: Bool {
+        didSet {
+            UserDefaults.standard.set(isDarkMode, forKey: "isDarkMode")
+        }
+    }
+    
+    static let shared = ThemeManager()
+    
+    private init() {
+        self.isDarkMode = UserDefaults.standard.bool(forKey: "isDarkMode")
+    }
+    
+    func toggleTheme() {
+        isDarkMode.toggle()
+    }
+}
+
+// MARK: - Extensions
+
+extension Double {
+    var cgFloat: CGFloat {
+        return CGFloat(self)
+    }
+}
+
+extension Int {
+    var double: Double {
+        return Double(self)
     }
 } 
