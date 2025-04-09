@@ -24,6 +24,15 @@ struct Playlist: Identifiable, Codable {
         isExpanded = false
     }
     
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(wallpapers, forKey: .wallpapers)
+        try container.encode(playbackMode, forKey: .playbackMode)
+        // Don't encode isExpanded state
+    }
+    
     init(id: UUID = UUID(), name: String, wallpapers: [WallpaperItem] = [], isExpanded: Bool = false, playbackMode: PlaybackMode = .sequential) {
         self.id = id
         self.name = name
@@ -60,6 +69,14 @@ struct WallpaperItem: Identifiable, Codable {
         isSelected = false
     }
     
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(path, forKey: .path)
+        try container.encode(name, forKey: .name)
+        // Don't encode isSelected state
+    }
+    
     var fileURL: URL? {
         if path.hasPrefix("file://") {
             return URL(string: path)
@@ -70,7 +87,7 @@ struct WallpaperItem: Identifiable, Codable {
 }
 
 // MARK: - Playback Mode
-enum PlaybackMode: String, Codable {
+enum PlaybackMode: String, Codable, CaseIterable {
     case sequential = "Sequential"
     case random = "Random"
     case shuffle = "Shuffle"

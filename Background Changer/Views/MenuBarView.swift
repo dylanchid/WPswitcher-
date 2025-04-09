@@ -17,41 +17,6 @@ struct VisualEffectView: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) { }
 }
 
-struct WallpaperItem: Identifiable, Codable {
-    let id: UUID
-    let path: String
-    let name: String
-    var isSelected: Bool
-    
-    init(id: UUID = UUID(), path: String, name: String, isSelected: Bool = false) {
-        self.id = id
-        self.path = path
-        self.name = name
-        self.isSelected = isSelected
-    }
-    
-    enum CodingKeys: String, CodingKey {
-        case id, path, name
-        // Don't persist selection state
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        path = try container.decode(String.self, forKey: .path)
-        name = try container.decode(String.self, forKey: .name)
-        isSelected = false
-    }
-    
-    var fileURL: URL? {
-        if path.hasPrefix("file://") {
-            return URL(string: path)
-        } else {
-            return URL(fileURLWithPath: path)
-        }
-    }
-}
-
 struct MenuBarView: View {
     @StateObject var wallpaperManager: WallpaperManager = WallpaperManager.shared
     @State private var selectedNavigation: NavigationItem? = .home
@@ -86,79 +51,79 @@ struct MenuBarView: View {
     
     var body: some View {
         NavigationView {
-        // Sidebar with translucent background
-        ZStack {
-            VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
-            List(selection: $selectedNavigation) {
-                Section {
-                    NavigationLink(tag: .home, selection: $selectedNavigation) {
-                        HomeView(wallpaperManager: wallpaperManager)
-                    } label: {
+            // Sidebar with translucent background
+            ZStack {
+                VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
+                List(selection: $selectedNavigation) {
+                    Section {
+                        NavigationLink(tag: .home, selection: $selectedNavigation) {
+                            HomeView(wallpaperManager: wallpaperManager)
+                        } label: {
+                            Label("Home", systemImage: "house")
+                                .font(.title3.weight(.semibold))
+                                .foregroundColor(.primary)
+                        }
+                        
+                        NavigationLink(tag: .playlists, selection: $selectedNavigation) {
+                            PlaylistsView(wallpaperManager: wallpaperManager)
+                        } label: {
+                            Label("Playlists", systemImage: "play.square.stack")
+                                .font(.title3.weight(.semibold))
+                                .foregroundColor(.primary)
+                        }
+                        
+                        NavigationLink(tag: .allPhotos, selection: $selectedNavigation) {
+                            AllPhotosView(wallpaperManager: wallpaperManager)
+                        } label: {
+                            Label("All Photos", systemImage: "photo.on.rectangle")
+                                .font(.title3.weight(.semibold))
+                                .foregroundColor(.primary)
+                        }
+                        
+                        NavigationLink(tag: .settings, selection: $selectedNavigation) {
+                            SettingsView(wallpaperManager: wallpaperManager)
+                        } label: {
+                            Label("Settings", systemImage: "gear")
+                                .font(.title3.weight(.semibold))
+                                .foregroundColor(.primary)
+                        }
+                    }
+                }
+                .listStyle(SidebarListStyle())
+                .frame(minWidth: 150, maxWidth: 200)
+            }
+            
+            // Default content view
+            HomeView(wallpaperManager: wallpaperManager)
+            
+            // Bottom Tab Bar
+            VStack {
+                Spacer()
+                HStack {
+                    Button { selectedNavigation = .home } label: {
                         Label("Home", systemImage: "house")
                             .font(.title3.weight(.semibold))
                             .foregroundColor(.primary)
                     }
-                    
-                    NavigationLink(tag: .playlists, selection: $selectedNavigation) {
-                        PlaylistsView(wallpaperManager: wallpaperManager)
-                    } label: {
+                    Spacer()
+                    Button { selectedNavigation = .playlists } label: {
                         Label("Playlists", systemImage: "play.square.stack")
                             .font(.title3.weight(.semibold))
                             .foregroundColor(.primary)
                     }
-                    
-                    NavigationLink(tag: .allPhotos, selection: $selectedNavigation) {
-                        AllPhotosView(wallpaperManager: wallpaperManager)
-                    } label: {
-                        Label("All Photos", systemImage: "photo.on.rectangle")
-                            .font(.title3.weight(.semibold))
-                            .foregroundColor(.primary)
-                    }
-                    
-                    NavigationLink(tag: .settings, selection: $selectedNavigation) {
-                        SettingsView(wallpaperManager: wallpaperManager)
-                    } label: {
+                    Spacer()
+                    Button { selectedNavigation = .settings } label: {
                         Label("Settings", systemImage: "gear")
                             .font(.title3.weight(.semibold))
                             .foregroundColor(.primary)
                     }
                 }
+                .padding()
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .padding(.horizontal)
             }
-            .listStyle(SidebarListStyle())
-            .frame(minWidth: 150, maxWidth: 200)
-        }
-            
-        // Default content view
-        HomeView(wallpaperManager: wallpaperManager)
-
-        // Bottom Tab Bar
-        VStack {
-            Spacer()
-            HStack {
-                Button { selectedNavigation = .home } label: {
-                    Label("Home", systemImage: "house")
-                        .font(.title3.weight(.semibold))
-                        .foregroundColor(.primary)
-                }
-                Spacer()
-                Button { selectedNavigation = .playlists } label: {
-                    Label("Playlists", systemImage: "play.square.stack")
-                        .font(.title3.weight(.semibold))
-                        .foregroundColor(.primary)
-                }
-                Spacer()
-                Button { selectedNavigation = .settings } label: {
-                    Label("Settings", systemImage: "gear")
-                        .font(.title3.weight(.semibold))
-                        .foregroundColor(.primary)
-                }
-            }
-            .padding()
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .padding(.horizontal)
-        }
-        .frame(maxHeight: .infinity, alignment: .bottom)
+            .frame(maxHeight: .infinity, alignment: .bottom)
             
             // Update preview references
             if let playlist = wallpaperManager.playlists.first,
@@ -166,9 +131,12 @@ struct MenuBarView: View {
                let fileURL = firstWallpaper.fileURL,
                let image = NSImage(contentsOf: fileURL) {
                 PlaylistPreview(
-                    image: image,
-                    name: playlist.name,
-                    wallpaperCount: playlist.wallpapers.count
+                    playlist: playlist,
+                    previewData: PlaylistPreviewData(
+                        id: playlist.id,
+                        previewImages: [image],
+                        isActive: playlist.id == wallpaperManager.activePlaylistId
+                    )
                 )
             }
         }
@@ -292,49 +260,31 @@ struct MenuBarView: View {
                 }
             
             if isRotating {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Change every: \(Int(rotationInterval)) seconds")
-                        .font(.caption)
+                HStack {
+                    Text("Rotation Interval:")
                     Slider(value: $rotationInterval, in: 10...3600, step: 10)
+                    Text("\(Int(rotationInterval))s")
                 }
             }
         }
     }
     
     private func addWallpapers() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.image]
-        panel.allowsMultipleSelection = true
-        panel.canChooseDirectories = false
+        let openPanel = NSOpenPanel()
+        openPanel.allowsMultipleSelection = true
+        openPanel.canChooseDirectories = false
+        openPanel.canChooseFiles = true
+        openPanel.allowedContentTypes = [.image]
         
-        if let window = NSApp.windows.first(where: { $0.isKeyWindow }) {
-            panel.beginSheetModal(for: window) { response in
-                if response == .OK {
-                    for url in panel.urls {
-                        if url.startAccessingSecurityScopedResource() {
-                            let wallpaper = WallpaperItem(
-                                id: UUID(),
-                                path: url.absoluteString,
-                                name: url.lastPathComponent,
-                                isSelected: false
-                            )
-                            // Add to the first playlist if none exists
-                            if let firstPlaylist = wallpaperManager.playlists.first {
-                                try? wallpaperManager.addWallpapersToPlaylist(
-                                    [wallpaper],
-                                    playlistId: firstPlaylist.id
-                                )
-                            }
-                            url.stopAccessingSecurityScopedResource()
-                        }
-                    }
-                    
-                    if selectedImagePath.isEmpty && !wallpapers.isEmpty {
-                        selectedImagePath = wallpapers[0].path
-                    }
-                }
-            }
+        if openPanel.runModal() == .OK {
+            let urls = openPanel.urls
+            wallpaperManager.addWallpapers(urls)
         }
+    }
+    
+    private func handleError(_ error: Error) {
+        errorMessage = error.localizedDescription
+        showingError = true
     }
 }
 
@@ -431,7 +381,7 @@ struct PlaylistView: View {
                         if wallpaperManager.isRotating {
                             wallpaperManager.stopRotation()
                         } else {
-                            wallpaperManager.startPlaylistRotation(playlist, interval: 60)
+                            wallpaperManager.startPlaylistRotation(playlistId: playlist.id, interval: 60)
                         }
                     }) {
                         Image(systemName: wallpaperManager.isRotating ? "pause.circle" : "play.circle")
@@ -442,7 +392,7 @@ struct PlaylistView: View {
                         Picker("Playback Mode", selection: Binding(
                             get: { playlist.playbackMode },
                             set: { newValue in
-                                wallpaperManager.updatePlaylistPlaybackMode(playlist.id, mode: newValue)
+                                try? wallpaperManager.updatePlaylistPlaybackMode(playlist.id, newValue)
                             }
                         )) {
                             Text("Sequential").tag(PlaybackMode.sequential)
@@ -503,7 +453,7 @@ struct PlaylistView: View {
                     }
                     
                     let targetIndex = dropTargetIndex ?? playlist.wallpapers.count
-                    wallpaperManager.moveWallpaper(
+                    try? wallpaperManager.moveWallpaper(
                         from: playlist,
                         at: sourceIndex,
                         to: playlist,
@@ -637,7 +587,12 @@ struct PlaylistDropDelegate: DropDelegate {
             DispatchQueue.main.async {
                 for sourcePlaylist in wallpaperManager.playlists {
                     if let sourceIndex = sourcePlaylist.wallpapers.firstIndex(where: { $0.id.uuidString == idString }) {
-                        wallpaperManager.moveWallpaper(from: sourcePlaylist, at: sourceIndex, to: playlist, at: targetIndex)
+                        try? wallpaperManager.moveWallpaper(
+                            from: sourcePlaylist,
+                            at: sourceIndex,
+                            to: playlist,
+                            at: targetIndex
+                        )
                         break
                     }
                 }
@@ -996,23 +951,25 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 // Current Wallpaper Preview with Settings
-                if let (currentURL, currentImage) = wallpaperManager.getCurrentSystemWallpaper() {
+                if let (currentURL, currentScreen) = wallpaperManager.getCurrentSystemWallpaper() {
                     HStack(alignment: .top, spacing: 20) {
                         // Left side - Wallpaper preview
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Current Wallpaper")
                                 .font(.headline)
                             
-                            Image(nsImage: currentImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(height: 150)
-                                .frame(maxWidth: .infinity)
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
-                                )
+                            if let image = NSImage(contentsOf: currentURL) {
+                                Image(nsImage: image)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(height: 150)
+                                    .frame(maxWidth: .infinity)
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                    )
+                            }
                         }
                         .frame(maxWidth: .infinity)
                         

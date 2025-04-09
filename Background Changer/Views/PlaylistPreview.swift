@@ -1,19 +1,6 @@
 import AppKit
 import SwiftUI
 
-// Model for preview data
-struct PlaylistPreviewData: Identifiable {
-    let id: UUID
-    let previewImages: [NSImage]
-    let isActive: Bool
-    
-    init(id: UUID, previewImages: [NSImage], isActive: Bool) {
-        self.id = id
-        self.previewImages = previewImages
-        self.isActive = isActive
-    }
-}
-
 // View component
 struct PlaylistPreview: View {
     let playlist: Playlist
