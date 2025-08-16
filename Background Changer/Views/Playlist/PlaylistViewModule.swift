@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Wallpaper
 
 public enum PlaylistViewModule {
     public struct View: SwiftUI.View {

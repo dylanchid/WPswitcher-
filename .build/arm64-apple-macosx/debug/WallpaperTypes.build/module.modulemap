@@ -1,0 +1,4 @@
+module WallpaperTypes {
+    header "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperTypes-Swift.h"
+    requires objc
+}

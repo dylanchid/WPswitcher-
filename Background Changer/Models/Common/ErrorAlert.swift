@@ -5,11 +5,13 @@ struct ErrorAlert: Identifiable {
     let title: String
     let message: String
     let severity: ErrorSeverity
+    let error: AppError?
     
-    init(title: String, message: String, severity: ErrorSeverity = .error) {
+    init(title: String, message: String, severity: ErrorSeverity = .error, error: AppError? = nil) {
         self.title = title
         self.message = message
         self.severity = severity
+        self.error = error
     }
 }
 

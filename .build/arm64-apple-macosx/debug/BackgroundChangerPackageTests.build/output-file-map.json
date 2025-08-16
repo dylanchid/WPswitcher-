@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChangerPackageTests.build/master.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChangerPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChangerPackageTests.build/runner.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChangerPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChangerPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChangerPackageTests.build/runner.swiftdeps"
+  }
+}

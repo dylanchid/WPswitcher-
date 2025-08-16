@@ -1,0 +1,24 @@
+{
+  "object" : {
+    "artifacts" : [
+
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "wallpaper",
+          "kind" : "fileSystem",
+          "location" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper",
+          "name" : "Wallpaper"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper"
+        },
+        "subpath" : "wallpaper"
+      }
+    ]
+  },
+  "version" : 6
+}

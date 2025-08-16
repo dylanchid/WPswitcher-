@@ -8,11 +8,13 @@ import SwiftUI
 struct Background_ChangerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
+    @StateObject private var themeManager = ThemeManager()
 
     var body: some Scene {
         WindowGroup {
             MainAppView()
                 .environmentObject(appState)
+                .environmentObject(themeManager)
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)

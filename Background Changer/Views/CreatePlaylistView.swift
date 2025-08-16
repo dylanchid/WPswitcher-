@@ -1,4 +1,6 @@
 import SwiftUI
+import Wallpaper
+import WallpaperTypes
 
 struct CreatePlaylistView: View {
     @Environment(\.dismiss) private var dismiss
@@ -6,7 +8,7 @@ struct CreatePlaylistView: View {
     
     @State private var playlistName: String = ""
     @State private var duration: Double = 60
-    @State private var playbackMode: PlaybackMode = .sequential
+    @State private var playbackMode: Wallpaper.PlaybackMode = .sequential
     @State private var showError = false
     @State private var errorMessage = ""
     
@@ -39,6 +41,7 @@ struct CreatePlaylistView: View {
                 Picker("", selection: $playbackMode) {
                     Text("Sequential").tag(PlaybackMode.sequential)
                     Text("Random").tag(PlaybackMode.random)
+                    Text("Shuffle").tag(PlaybackMode.shuffle)
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .frame(width: 250)
@@ -74,6 +77,16 @@ struct CreatePlaylistView: View {
         do {
             try wallpaperManager.createPlaylist(name: playlistName)
             dismiss()
+        } catch let error as WallpaperTypes.WallpaperError {
+            showError = true
+            switch error {
+            case .invalidPlaylistOperation(let message):
+                errorMessage = message
+            case .playlistLimitExceeded:
+                errorMessage = "You have reached the maximum number of playlists."
+            default:
+                errorMessage = error.localizedDescription
+            }
         } catch {
             showError = true
             errorMessage = error.localizedDescription

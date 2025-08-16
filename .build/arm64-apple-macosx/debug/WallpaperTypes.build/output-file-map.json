@@ -1,0 +1,41 @@
+{
+  "": {
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/master.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Wallpaper/Sources/WallpaperTypes/DisplayMode.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Wallpaper/Sources/WallpaperTypes/Types.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Types.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Types.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Types~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Types.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Wallpaper/Sources/WallpaperTypes/WallpaperError.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperError.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperError.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperError~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperError.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Wallpaper/Sources/WallpaperTypes/WallpaperItem.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperItem.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperItem.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperItem~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperItem.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Wallpaper/Sources/WallpaperTypes/WallpaperMetadata.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperMetadata.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperMetadata.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperMetadata~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperMetadata.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Wallpaper/Sources/WallpaperTypes/WallpaperProtocols.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperProtocols.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperProtocols.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperProtocols~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperProtocols.swiftdeps"
+  }
+}

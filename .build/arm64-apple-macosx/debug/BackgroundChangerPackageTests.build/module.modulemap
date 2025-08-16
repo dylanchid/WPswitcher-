@@ -1,0 +1,4 @@
+module BackgroundChangerPackageTests {
+    header "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerPackageTests.build/BackgroundChangerPackageTests-Swift.h"
+    requires objc
+}

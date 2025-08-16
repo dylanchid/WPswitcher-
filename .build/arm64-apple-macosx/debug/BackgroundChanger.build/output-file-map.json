@@ -1,0 +1,263 @@
+{
+  "": {
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/master.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/App/Background_ChangerApp.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Background_ChangerApp.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Background_ChangerApp.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Background_ChangerApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Background_ChangerApp.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/AppDelegate.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppDelegate.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppDelegate.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppDelegate~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppDelegate.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Extensions/NSImage+Dimensions.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/NSImage+Dimensions.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/NSImage+Dimensions.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/NSImage+Dimensions~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/NSImage+Dimensions.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Extensions/URL+Validation.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Managers/KeyboardMonitor.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardMonitor.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardMonitor.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardMonitor.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Managers/StatusItemManager.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StatusItemManager.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StatusItemManager.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StatusItemManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StatusItemManager.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Managers/WindowManager.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WindowManager.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WindowManager.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WindowManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WindowManager.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Backup.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Backup.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Backup.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Backup~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Backup.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Common/ErrorAlert.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ErrorAlert.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ErrorAlert.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ErrorAlert~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ErrorAlert.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Common/KeyboardShortcut.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardShortcut.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardShortcut.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardShortcut~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardShortcut.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Error/AppError.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppError.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppError.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppError~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppError.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Migration/AppVersion.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppVersion.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppVersion.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppVersion~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppVersion.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Migration/MigrationManager.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationManager.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationManager.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationManager.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Migration/MigrationTypes.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationTypes.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationTypes.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationTypes~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationTypes.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Models.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Models.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Models.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Models~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Models.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/PlaylistVersion.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistVersion.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistVersion.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistVersion~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistVersion.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Theme.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Theme.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Theme.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Theme~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Theme.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/UserProfile.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserProfile.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserProfile.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserProfile~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserProfile.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Wallpaper/Playlist.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Playlist.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Playlist.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Playlist~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Playlist.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Wallpaper/WallpaperCache.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperCache.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperCache.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperCache~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperCache.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Models/Wallpaper/WallpaperManager.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Modifiers/GlassCardModifier.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/GlassCardModifier.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/GlassCardModifier.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/GlassCardModifier~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/GlassCardModifier.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Services/Persistence.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Persistence.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Persistence.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Persistence~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Persistence.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Services/PlaylistService.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistService.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistService.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistService~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistService.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Services/UserSettingsService.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserSettingsService.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserSettingsService.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserSettingsService~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserSettingsService.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Utilities/FileMonitor.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/FileMonitor.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/FileMonitor.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/FileMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/FileMonitor.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/AllPhotosView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AllPhotosView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AllPhotosView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AllPhotosView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AllPhotosView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/Components/LoadingErrorView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/LoadingErrorView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/LoadingErrorView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/LoadingErrorView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/LoadingErrorView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/CreatePlaylistView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/CreatePlaylistView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/CreatePlaylistView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/CreatePlaylistView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/CreatePlaylistView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/EditPlaylistView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/EditPlaylistView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/EditPlaylistView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/EditPlaylistView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/EditPlaylistView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/HomeView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/HomeView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/HomeView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/HomeView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/HomeView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/MainAppView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MainAppView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MainAppView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MainAppView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MainAppView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/MenuBarView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MenuBarView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MenuBarView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MenuBarView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MenuBarView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/Playlist/PlaylistThumbnailView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistThumbnailView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistThumbnailView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistThumbnailView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistThumbnailView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/Playlist/PlaylistView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/Playlist/PlaylistViewModel.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistViewModel.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistViewModel.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistViewModel.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/Playlist/PlaylistViewModule.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistViewModule.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistViewModule.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistViewModule~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistViewModule.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/PlaylistPreview.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistPreview.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistPreview.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistPreview~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistPreview.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/PlaylistsView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistsView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistsView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistsView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/Settings/BackupSettingsView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/BackupSettingsView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/BackupSettingsView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/BackupSettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/BackupSettingsView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/SettingsView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/SettingsView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/SettingsView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/SettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/SettingsView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/VisualEffectView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/VisualEffectView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/VisualEffectView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/VisualEffectView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/VisualEffectView.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/Background Changer/Background Changer/Views/WallpaperThumbnailView.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperThumbnailView.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperThumbnailView.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperThumbnailView~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/Background Changer/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperThumbnailView.swiftdeps"
+  }
+}

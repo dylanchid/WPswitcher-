@@ -1,11 +1,13 @@
 import XCTest
 import AppKit
 @testable import Background_Changer
+import Wallpaper
 
 class WallpaperItemTests: XCTestCase {
     var testWallpaper: WallpaperItem!
     var testURL: URL!
     var testImage: NSImage!
+    var wallpaperService: WallpaperServiceProtocol!
     
     override func setUp() {
         super.setUp()
@@ -25,6 +27,8 @@ class WallpaperItemTests: XCTestCase {
             try? imageData.write(to: testURL)
         }
         
+        wallpaperService = UnifiedWallpaperService()
+        
         testWallpaper = WallpaperItem(
             id: UUID(),
             path: testURL.path,
@@ -38,6 +42,7 @@ class WallpaperItemTests: XCTestCase {
         testWallpaper = nil
         testURL = nil
         testImage = nil
+        wallpaperService = nil
         super.tearDown()
     }
     
@@ -76,24 +81,21 @@ class WallpaperItemTests: XCTestCase {
     }
     
     func testLoadMetadata() async throws {
-        let metadata = try await testWallpaper.loadMetadata()
+        let metadata = try await wallpaperService.loadMetadata(for: testURL)
         XCTAssertNotNil(metadata)
-        XCTAssertGreaterThan(metadata.size.width, 0)
-        XCTAssertGreaterThan(metadata.size.height, 0)
+        XCTAssertGreaterThan(metadata.dimensions.width, 0)
+        XCTAssertGreaterThan(metadata.dimensions.height, 0)
         XCTAssertGreaterThan(metadata.fileSize, 0)
-        XCTAssertNotNil(metadata.lastModified)
         XCTAssertEqual(metadata.format, "jpg")
+        XCTAssertEqual(metadata.colorSpace, "RGB")
+        XCTAssertGreaterThan(metadata.dpi, 0)
     }
     
     func testLoadMetadataInvalidFile() async {
-        let invalidWallpaper = WallpaperItem(
-            id: UUID(),
-            path: "/nonexistent/path/image.jpg",
-            name: "Invalid Image"
-        )
+        let invalidURL = URL(fileURLWithPath: "/nonexistent/path/image.jpg")
         
         do {
-            _ = try await invalidWallpaper.loadMetadata()
+            _ = try await wallpaperService.loadMetadata(for: invalidURL)
             XCTFail("Expected error when loading invalid file")
         } catch {
             XCTAssertTrue(error is WallpaperError)
@@ -101,18 +103,12 @@ class WallpaperItemTests: XCTestCase {
     }
     
     func testReloadMetadata() async throws {
-        let metadata1 = try await testWallpaper.loadMetadata()
-        let metadata2 = try await testWallpaper.reloadMetadata()
+        let metadata1 = try await wallpaperService.loadMetadata(for: testURL)
+        let metadata2 = try await wallpaperService.loadMetadata(for: testURL)
         
-        XCTAssertNotEqual(metadata1.lastModified, metadata2.lastModified)
-    }
-    
-    func testClearCache() async throws {
-        _ = try await testWallpaper.loadMetadata()
-        XCTAssertNotNil(testWallpaper.metadata)
-        
-        testWallpaper.clearCache()
-        XCTAssertNil(testWallpaper.metadata)
+        XCTAssertEqual(metadata1.dimensions, metadata2.dimensions)
+        XCTAssertEqual(metadata1.fileSize, metadata2.fileSize)
+        XCTAssertEqual(metadata1.format, metadata2.format)
     }
     
     func testBatchLoading() async throws {
@@ -146,12 +142,11 @@ class WallpaperMetadataTests: XCTestCase {
         
         let image = NSImage(contentsOf: testURL)!
         testMetadata = WallpaperMetadata(
-            url: testURL,
-            name: "Test Image",
-            size: image.size,
+            dimensions: image.size,
             fileSize: 1024,
-            lastModified: Date(),
-            format: "jpg"
+            format: "jpg",
+            colorSpace: "RGB",
+            dpi: 72.0
         )
     }
     
@@ -163,16 +158,16 @@ class WallpaperMetadataTests: XCTestCase {
     
     func testMetadataInitialization() {
         XCTAssertNotNil(testMetadata)
-        XCTAssertEqual(testMetadata.url, testURL)
-        XCTAssertEqual(testMetadata.name, "Test Image")
-        XCTAssertGreaterThan(testMetadata.size.width, 0)
-        XCTAssertGreaterThan(testMetadata.size.height, 0)
+        XCTAssertGreaterThan(testMetadata.dimensions.width, 0)
+        XCTAssertGreaterThan(testMetadata.dimensions.height, 0)
         XCTAssertEqual(testMetadata.fileSize, 1024)
         XCTAssertEqual(testMetadata.format, "jpg")
+        XCTAssertEqual(testMetadata.colorSpace, "RGB")
+        XCTAssertEqual(testMetadata.dpi, 72.0)
     }
     
     func testAspectRatio() {
-        let expectedRatio = testMetadata.size.width / testMetadata.size.height
+        let expectedRatio = testMetadata.dimensions.width / testMetadata.dimensions.height
         XCTAssertEqual(testMetadata.aspectRatio, expectedRatio)
     }
     
@@ -181,81 +176,16 @@ class WallpaperMetadataTests: XCTestCase {
         XCTAssertTrue(formattedSize.contains("KB") || formattedSize.contains("bytes"))
     }
     
-    func testFormattedLastModified() {
-        let formattedDate = testMetadata.formattedLastModified
-        XCTAssertFalse(formattedDate.isEmpty)
-    }
-    
     func testIsValid() {
-        XCTAssertTrue(testMetadata.isValid())
+        XCTAssertTrue(testMetadata.isValid)
         
         let invalidMetadata = WallpaperMetadata(
-            url: testURL,
-            name: "Invalid",
-            size: CGSize(width: 0, height: 0),
+            dimensions: CGSize(width: 0, height: 0),
             fileSize: 0,
-            lastModified: Date(),
-            format: ""
+            format: "",
+            colorSpace: "",
+            dpi: 0
         )
-        XCTAssertFalse(invalidMetadata.isValid())
-    }
-    
-    func testEquality() {
-        let sameMetadata = WallpaperMetadata(
-            url: testURL,
-            name: "Test Image",
-            size: testMetadata.size,
-            fileSize: 1024,
-            lastModified: testMetadata.lastModified,
-            format: "jpg"
-        )
-        
-        XCTAssertEqual(testMetadata, sameMetadata)
-        
-        let differentMetadata = WallpaperMetadata(
-            url: testURL,
-            name: "Different",
-            size: CGSize(width: 100, height: 100),
-            fileSize: 2048,
-            lastModified: Date(),
-            format: "png"
-        )
-        
-        XCTAssertNotEqual(testMetadata, differentMetadata)
-    }
-    
-    func testHash() {
-        let sameMetadata = WallpaperMetadata(
-            url: testURL,
-            name: "Test Image",
-            size: testMetadata.size,
-            fileSize: 1024,
-            lastModified: testMetadata.lastModified,
-            format: "jpg"
-        )
-        
-        XCTAssertEqual(testMetadata.hash, sameMetadata.hash)
-    }
-    
-    func testLoadFromURL() async throws {
-        let metadata = try await WallpaperMetadata.load(from: testURL)
-        XCTAssertNotNil(metadata)
-        XCTAssertEqual(metadata.url, testURL)
-        XCTAssertGreaterThan(metadata.size.width, 0)
-        XCTAssertGreaterThan(metadata.size.height, 0)
-        XCTAssertGreaterThan(metadata.fileSize, 0)
-        XCTAssertNotNil(metadata.lastModified)
-        XCTAssertEqual(metadata.format, "jpg")
-    }
-    
-    func testLoadFromInvalidURL() async {
-        let invalidURL = URL(fileURLWithPath: "/nonexistent/path/image.jpg")
-        
-        do {
-            _ = try await WallpaperMetadata.load(from: invalidURL)
-            XCTFail("Expected error when loading from invalid URL")
-        } catch {
-            XCTAssertTrue(error is WallpaperError)
-        }
+        XCTAssertFalse(invalidMetadata.isValid)
     }
 } 

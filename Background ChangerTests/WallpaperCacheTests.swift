@@ -1,16 +1,17 @@
 import XCTest
 import AppKit
 @testable import Background_Changer
+import Wallpaper
 
 class WallpaperCacheTests: XCTestCase {
-    var cache: WallpaperCache!
+    var cache: CacheServiceProtocol!
     var testImage: NSImage!
     var testURL: URL!
     var testMetadata: WallpaperMetadata!
     
     override func setUp() {
         super.setUp()
-        cache = WallpaperCache.shared
+        cache = UnifiedCacheService()
         cache.clearCache()
         
         // Create test image
@@ -27,10 +28,11 @@ class WallpaperCacheTests: XCTestCase {
         
         // Create test metadata
         testMetadata = WallpaperMetadata(
-            width: 100,
-            height: 100,
+            dimensions: CGSize(width: 100, height: 100),
             fileSize: 1024,
-            lastModified: Date()
+            format: "png",
+            colorSpace: "RGB",
+            dpi: 72.0
         )
     }
     
@@ -49,8 +51,8 @@ class WallpaperCacheTests: XCTestCase {
         // Test getting metadata
         let retrievedMetadata = cache.getMetadata(for: testURL)
         XCTAssertNotNil(retrievedMetadata)
-        XCTAssertEqual(retrievedMetadata?.width, testMetadata.width)
-        XCTAssertEqual(retrievedMetadata?.height, testMetadata.height)
+        XCTAssertEqual(retrievedMetadata?.dimensions.width, testMetadata.dimensions.width)
+        XCTAssertEqual(retrievedMetadata?.dimensions.height, testMetadata.dimensions.height)
     }
     
     func testMetadataCacheExpiration() {
@@ -58,10 +60,11 @@ class WallpaperCacheTests: XCTestCase {
         for i in 0..<1001 {
             let url = URL(string: "test://\(i)")!
             let metadata = WallpaperMetadata(
-                width: i,
-                height: i,
+                dimensions: CGSize(width: CGFloat(i), height: CGFloat(i)),
                 fileSize: Int64(i),
-                lastModified: Date()
+                format: "png",
+                colorSpace: "RGB",
+                dpi: 72.0
             )
             cache.setMetadata(metadata, for: url)
         }
@@ -109,5 +112,19 @@ class WallpaperCacheTests: XCTestCase {
         // Verify cache is empty
         XCTAssertNil(cache.getMetadata(for: testURL))
         XCTAssertNil(cache.getImage(for: testURL))
+    }
+    
+    // MARK: - File Operations Tests
+    
+    func testCacheWallpaper() async throws {
+        let cachedURL = try await cache.cacheWallpaper(from: testURL)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: cachedURL.path))
+        XCTAssertNotEqual(cachedURL, testURL)
+    }
+    
+    func testRemoveFromCache() async throws {
+        let cachedURL = try await cache.cacheWallpaper(from: testURL)
+        try await cache.removeFromCache(cachedURL)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: cachedURL.path))
     }
 } 

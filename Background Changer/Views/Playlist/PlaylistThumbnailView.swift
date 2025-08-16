@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import WallpaperTypes
 
 /// A view that displays a thumbnail of a wallpaper in a playlist with drag and drop support
 struct PlaylistThumbnailView: View {
@@ -35,12 +36,8 @@ struct PlaylistThumbnailView: View {
         ZStack {
             // Drop target indicator
             if isDropTarget {
-                Rectangle()
-                    .fill(Color.blue)
-                    .frame(width: 2)
-                    .frame(height: 60)
-                    .position(x: 0, y: 30)
-                    .accessibilityLabel("Drop target indicator")
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Color.blue, lineWidth: 2)
             }
             
             // Thumbnail image
@@ -49,6 +46,10 @@ struct PlaylistThumbnailView: View {
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 60, height: 60)
                 .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(isDragged ? Color.blue : Color.clear, lineWidth: 2)
+                )
                 .onTapGesture(perform: onTap)
                 .onHover { isHovered in
                     if isHovered {
@@ -85,21 +86,22 @@ struct PlaylistThumbnailView: View {
 // MARK: - Preview Provider
 
 struct PlaylistThumbnailView_Previews: PreviewProvider {
-    static var previews: some View {
-        // Create a mock image
-        let mockImage = NSImage(size: NSSize(width: 100, height: 100))
-        mockImage.lockFocus()
+    static var mockImage: NSImage = {
+        let image = NSImage(size: NSSize(width: 100, height: 100))
+        image.lockFocus()
         NSColor.blue.setFill()
         NSBezierPath(rect: NSRect(x: 0, y: 0, width: 100, height: 100)).fill()
-        mockImage.unlockFocus()
-        
-        // Create a mock wallpaper
-        let mockWallpaper = WallpaperItem(
-            id: UUID(),
-            path: "/path/to/wallpaper.jpg",
-            name: "Preview Wallpaper",
-            isSelected: false
-        )
+        image.unlockFocus()
+        return image
+    }()
+    
+    static var mockWallpaper: WallpaperItem = WallpaperItem(
+        id: UUID(),
+        url: URL(fileURLWithPath: "/path/to/wallpaper.jpg"),
+        name: "Preview Wallpaper"
+    )
+    
+    static var previews: some View {
         
         // Preview with different states
         Group {

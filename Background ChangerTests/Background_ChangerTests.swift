@@ -8,15 +8,18 @@
 import XCTest
 import AppKit
 @testable import Background_Changer
+import Wallpaper
 
 class Background_ChangerTests: XCTestCase {
     
     var wallpaperManager: WallpaperManager!
+    var wallpaperService: WallpaperServiceProtocol!
     var testBundle: Bundle!
     var testImageURLs: [URL]!
     
     override func setUp() {
         super.setUp()
+        wallpaperService = UnifiedWallpaperService()
         wallpaperManager = WallpaperManager.shared
         testBundle = Bundle(for: type(of: self))
         
@@ -33,30 +36,31 @@ class Background_ChangerTests: XCTestCase {
     
     // MARK: - Basic Functionality Tests
     
-    func testAddWallpaper() {
+    func testAddWallpaper() async throws {
         guard let testURL = testImageURLs.first else {
             XCTFail("No test image available")
             return
         }
         
-        wallpaperManager.addWallpapers([testURL])
+        try await wallpaperManager.addWallpapers([testURL])
         XCTAssertEqual(wallpaperManager.allWallpapers.count, 1)
-        XCTAssertEqual(wallpaperManager.allWallpapers.first, testURL)
+        XCTAssertEqual(wallpaperManager.allWallpapers.first?.fileURL, testURL)
     }
     
-    func testRemoveWallpaper() {
+    func testRemoveWallpaper() async throws {
         guard let testURL = testImageURLs.first else {
             XCTFail("No test image available")
             return
         }
         
-        wallpaperManager.addWallpapers([testURL])
-        wallpaperManager.removeWallpapers([testURL])
+        try await wallpaperManager.addWallpapers([testURL])
+        let wallpaper = wallpaperManager.allWallpapers.first!
+        wallpaperManager.removeWallpapers([wallpaper])
         XCTAssertEqual(wallpaperManager.allWallpapers.count, 0)
     }
     
-    func testClearWallpapers() {
-        wallpaperManager.addWallpapers(testImageURLs)
+    func testClearWallpapers() async throws {
+        try await wallpaperManager.addWallpapers(testImageURLs)
         wallpaperManager.clearWallpapers()
         XCTAssertEqual(wallpaperManager.allWallpapers.count, 0)
     }
@@ -83,8 +87,8 @@ class Background_ChangerTests: XCTestCase {
     
     // MARK: - Wallpaper Rotation Tests
     
-    func testWallpaperRotation() {
-        wallpaperManager.addWallpapers(testImageURLs)
+    func testWallpaperRotation() async throws {
+        try await wallpaperManager.addWallpapers(testImageURLs)
         let initialWallpaper = wallpaperManager.currentWallpaper
         
         // Start rotation with a short interval
@@ -101,8 +105,8 @@ class Background_ChangerTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
     }
     
-    func testRotationStop() {
-        wallpaperManager.addWallpapers(testImageURLs)
+    func testRotationStop() async throws {
+        try await wallpaperManager.addWallpapers(testImageURLs)
         wallpaperManager.startRotation(interval: 0.1)
         wallpaperManager.stopRotation()
         
@@ -121,17 +125,20 @@ class Background_ChangerTests: XCTestCase {
     
     // MARK: - Error Handling Tests
     
-    func testInvalidWallpaperURL() {
+    func testInvalidWallpaperURL() async {
         let invalidURL = URL(string: "file:///nonexistent/path/image.jpg")!
-        XCTAssertThrowsError(try wallpaperManager.setWallpaper(from: invalidURL)) { error in
+        do {
+            try await wallpaperService.setWallpaper(from: invalidURL, mode: .fillScreen)
+            XCTFail("Expected error when setting invalid wallpaper")
+        } catch {
             XCTAssertTrue(error is WallpaperError)
         }
     }
     
     // MARK: - State Persistence Tests
     
-    func testStatePersistence() {
-        wallpaperManager.addWallpapers(testImageURLs)
+    func testStatePersistence() async throws {
+        try await wallpaperManager.addWallpapers(testImageURLs)
         let mode = DisplayMode.stretch
         wallpaperManager.updateDisplayMode(mode)
         wallpaperManager.updateShowOnAllSpaces(true)

@@ -112,7 +112,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "106"
             endingLineNumber = "106"
-            landmarkName = "loadMetadata()"
+            landmarkName = "clearCache()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -128,7 +128,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "108"
             endingLineNumber = "108"
-            landmarkName = "loadMetadata()"
+            landmarkName = "clearCache()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -144,8 +144,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "113"
             endingLineNumber = "113"
-            landmarkName = "loadMetadata()"
-            landmarkType = "7">
+            landmarkName = "WallpaperItem"
+            landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -226,6 +226,222 @@
             endingLineNumber = "4"
             landmarkName = "unknown"
             landmarkType = "0">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "498FE821-E806-492F-859A-1AECF843367D"
+            shouldBeEnabled = "Yes"
+            nameForDebugger = "setWallpaper"
+            condition = "url == nil || screen == nil || !FileManager.default.fileExists(atPath: url.path)&#10;"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Background Changer/Models/WallpaperManager.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "76"
+            endingLineNumber = "76"
+            landmarkName = "setWallpaper(from:for:)"
+            landmarkType = "7">
+            <Actions>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Attempting to set wallpaper - URL: @url.path@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Display Mode: @mode?.rawValue ?? &quot;default&quot;@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Screen: @screen?.description ?? &quot;nil&quot;@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+            </Actions>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "6C52805E-CF79-494B-81F8-280206DBD2E8"
+            shouldBeEnabled = "Yes"
+            nameForDebugger = "setWallpaper"
+            condition = "url == nil || screen == nil || !FileManager.default.fileExists(atPath: url.path)"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "-[WallpaperManager setWallpaper:for:mode:]"
+            moduleName = "Background Changer">
+            <Actions>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Setting wallpaper:&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Time: @CFAbsoluteTimeGetCurrent()@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Mode @mode?.rawValue@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;URL: @url.path@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Screen: @screen?.description@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+            </Actions>
+            <Locations>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "1C7E6445-676B-4027-9D86-28CE4ECA2BC3"
+            shouldBeEnabled = "Yes"
+            nameForDebugger = "getMetadata"
+            condition = "url.path.isEmpty || !FileManager.default.fileExists(atPath: url.path)&#10;"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Background Changer/Models/Wallpaper/WallpaperCache.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "31"
+            endingLineNumber = "31"
+            landmarkName = "getMetadata(for:)"
+            landmarkType = "7">
+            <Actions>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Cache Request - Path: @url.path@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Cache Status: @metadataCache.object(forKey: url.absoluteString as NSString) != nil ? &quot;HIT&quot; : &quot;MISS&quot;@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Cache Size: @metadataCache.countLimit@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+            </Actions>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BC1B0915-FFE6-407F-905F-6EA2D9F15CA6"
+            shouldBeEnabled = "Yes"
+            nameForDebugger = "addWallpapersToPlaylist"
+            condition = "wallpapers.isEmpty || playlistId == nil"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Background Changer/Models/WallpaperManager.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "253"
+            endingLineNumber = "253"
+            landmarkName = "addWallpapersToPlaylist(_:playlistId:)"
+            landmarkType = "7">
+            <Actions>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Adding Wallpapers - Count: @wallpapers.count@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Playlist ID: @playlistId@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "3. &quot;Current Playlist Size: @(playlists.first { $0.id == playlistId }?.wallpapers.count ?? 0)@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+            </Actions>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F41526DC-C37E-429F-BA84-B75736348F84"
+            shouldBeEnabled = "Yes"
+            nameForDebugger = "startRotation"
+            condition = "interval &lt;= 0 || wallpapers.isEmpty"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Background Changer/Models/WallpaperManager.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "120"
+            endingLineNumber = "120"
+            landmarkName = "startRotation(interval:)"
+            landmarkType = "7">
+            <Actions>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Rotation Interval: @interval@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Wallpaper Count: @wallpapers.count@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+               <BreakpointActionProxy
+                  ActionExtensionID = "Xcode.BreakpointAction.Log">
+                  <ActionContent
+                     message = "&quot;Current Index: @currentIndex@&quot;"
+                     conveyanceType = "0">
+                  </ActionContent>
+               </BreakpointActionProxy>
+            </Actions>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

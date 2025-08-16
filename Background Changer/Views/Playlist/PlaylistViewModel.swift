@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Wallpaper
+import WallpaperTypes
 
 @MainActor
 class PlaylistViewModel: ObservableObject {
@@ -16,6 +17,19 @@ class PlaylistViewModel: ObservableObject {
     let playlist: Playlist
     let onEdit: (Playlist) -> Void
     
+    // Version history properties
+    var canUndo: Bool {
+        wallpaperManager.currentVersionIndex >= 0
+    }
+    
+    var canRedo: Bool {
+        wallpaperManager.currentVersionIndex < wallpaperManager.versionHistory.count - 1
+    }
+    
+    var versionHistory: [PlaylistVersion] {
+        wallpaperManager.versionHistory
+    }
+    
     init(wallpaperManager: WallpaperManager, playlist: Playlist, onEdit: @escaping (Playlist) -> Void) {
         self.wallpaperManager = wallpaperManager
         self.playlist = playlist
@@ -29,9 +43,8 @@ class PlaylistViewModel: ObservableObject {
                 if url.startAccessingSecurityScopedResource() {
                     let wallpaper = WallpaperItem(
                         id: UUID(),
-                        path: url.absoluteString,
-                        name: url.lastPathComponent,
-                        isSelected: false
+                        url: url,
+                        name: url.lastPathComponent
                     )
                     do {
                         try wallpaperManager.addWallpapersToPlaylist([wallpaper], playlistId: playlist.id)
@@ -47,44 +60,39 @@ class PlaylistViewModel: ObservableObject {
     }
     
     func deletePlaylist() {
-        do {
-            try wallpaperManager.deletePlaylist(id: playlist.id)
-        } catch {
-            showError("Failed to delete playlist: \(error.localizedDescription)")
-        }
+        wallpaperManager.deletePlaylist(id: playlist.id)
     }
     
-    func moveWallpaper(from sourcePlaylist: Playlist, at sourceIndex: Int, to targetIndex: Int) {
+    func moveWallpaper(from sourceIndex: Int, to destinationIndex: Int) {
         do {
-            try wallpaperManager.moveWallpaper(
-                from: sourcePlaylist,
-                at: sourceIndex,
-                to: playlist,
-                at: targetIndex
-            )
+            try wallpaperManager.reorderWallpapers(in: playlist.id, from: sourceIndex, to: destinationIndex)
         } catch {
             showError("Failed to move wallpaper: \(error.localizedDescription)")
         }
     }
     
     func setWallpaper(from url: URL) {
-        do {
-            try wallpaperManager.setWallpaper(from: url)
+        Task {
+            await wallpaperManager.setWallpaper(from: url)
             wallpaperManager.setActivePlaylist(playlist.id)
-        } catch {
-            showError("Failed to set wallpaper: \(error.localizedDescription)")
         }
     }
     
     func updatePlaybackMode(_ mode: PlaybackMode) {
-        do {
-            try wallpaperManager.updatePlaylistPlaybackMode(playlist.id, mode)
-        } catch {
-            showError("Failed to update playback mode: \(error.localizedDescription)")
+        // Convert local PlaybackMode to Wallpaper.PlaybackMode
+        let wallpaperMode: Wallpaper.PlaybackMode
+        switch mode {
+        case .sequential:
+            wallpaperMode = .sequential
+        case .random:
+            wallpaperMode = .random
+        case .shuffle:
+            wallpaperMode = .shuffle
         }
+        wallpaperManager.updatePlaylistPlaybackMode(playlistId: playlist.id, mode: wallpaperMode)
     }
     
-    private func showError(_ message: String) {
+    func showError(_ message: String) {
         errorMessage = message
         isErrorPresented = true
     }

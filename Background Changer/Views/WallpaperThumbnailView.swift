@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Wallpaper
+import WallpaperTypes
 
 struct WallpaperThumbnailView: View {
     let wallpaper: WallpaperItem
@@ -28,7 +29,7 @@ struct WallpaperThumbnailView: View {
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(wallpaper.lastError?.errorDescription ?? "Unknown error")
+            Text("Unknown error")
         }
         .task {
             await loadThumbnail()
@@ -49,14 +50,16 @@ struct WallpaperThumbnailView: View {
             .frame(width: 60, height: 60)
             .cornerRadius(6)
             .onTapGesture {
-                if let url = wallpaper.fileURL {
-                    try? wallpaperManager.setWallpaper(from: url)
+                let url = wallpaper.url
+                Task {
+                    await wallpaperManager.setWallpaper(from: url)
                 }
             }
             .contextMenu {
                 Button(action: {
-                    if let url = wallpaper.fileURL {
-                        try? wallpaperManager.setWallpaper(from: url)
+                    let url = wallpaper.url
+                    Task {
+                        await wallpaperManager.setWallpaper(from: url)
                     }
                 }) {
                     Label("Set as Wallpaper", systemImage: "photo")
@@ -71,8 +74,9 @@ struct WallpaperThumbnailView: View {
         defer { isLoading = false }
         
         do {
-            let image = try await wallpaper.loadImage()
-            thumbnailImage = image
+            if let image = NSImage(contentsOf: wallpaper.url) {
+                thumbnailImage = image
+            }
         } catch {
             showError = true
         }
@@ -84,9 +88,8 @@ struct WallpaperThumbnailView_Previews: PreviewProvider {
     static var previews: some View {
         let mockWallpaper = WallpaperItem(
             id: UUID(),
-            path: "/path/to/image.jpg",
-            name: "Test Image",
-            isSelected: false
+            url: URL(fileURLWithPath: "/path/to/image.jpg"),
+            name: "Test Image"
         )
         WallpaperThumbnailView(wallpaper: mockWallpaper)
             .frame(width: 100, height: 100)

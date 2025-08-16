@@ -6,15 +6,17 @@
 //
 
 import SwiftUI
+import WallpaperTypes
 
 struct MainAppView: View {
     @EnvironmentObject var wallpaperManager: WallpaperManager
     @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedTab = 0
+    @AppStorage("lastSelectedTab") private var lastSelectedTab = 0
     
     var body: some View {
         NavigationView {
-            SidebarView()
+            SidebarView(selectedTab: $selectedTab)
                 .frame(minWidth: 200)
             
             TabView(selection: $selectedTab) {
@@ -24,7 +26,7 @@ struct MainAppView: View {
                     }
                     .tag(0)
                 
-                PlaylistView()
+                PlaylistsView(wallpaperManager: WallpaperManager.shared)
                     .tabItem {
                         Label("Playlists", systemImage: "list.bullet")
                     }
@@ -39,40 +41,42 @@ struct MainAppView: View {
         }
         .themedBackground()
         .environment(\.colorScheme, themeManager.theme.colorScheme == .dark ? .dark : .light)
+        .onChange(of: selectedTab) { newValue in
+            lastSelectedTab = newValue
+        }
+        .onAppear {
+            selectedTab = lastSelectedTab
+        }
     }
 }
 
 struct SidebarView: View {
     @EnvironmentObject var wallpaperManager: WallpaperManager
     @EnvironmentObject var themeManager: ThemeManager
+    @Binding var selectedTab: Int
     
     var body: some View {
-        List {
+        List(selection: $selectedTab) {
             Section(header: Text("Library").themedText()) {
                 NavigationLink(destination: WallpaperGridView()) {
                     Label("All Wallpapers", systemImage: "photo")
                         .themedText()
                 }
+                .tag(0)
                 
                 NavigationLink(destination: PlaylistView()) {
                     Label("Playlists", systemImage: "list.bullet")
                         .themedText()
                 }
+                .tag(1)
             }
             
             Section(header: Text("Playlists").themedText()) {
-                ForEach(wallpaperManager.userProfile.playlists) { playlist in
-                    NavigationLink(destination: PlaylistDetailView(playlist: playlist)) {
-                        HStack {
-                            Text(playlist.name)
-                                .themedText()
-                            Spacer()
-                            Text("\(playlist.wallpapers.count)")
-                                .themedSecondaryText()
-                                .font(.caption)
-                        }
-                    }
+                NavigationLink(destination: PlaylistsView(wallpaperManager: wallpaperManager)) {
+                    Label("Manage Playlists", systemImage: "list.bullet")
+                        .themedText()
                 }
+                .tag(1)
             }
         }
         .listStyle(SidebarListStyle())
@@ -84,6 +88,9 @@ struct WallpaperGridView: View {
     @EnvironmentObject var wallpaperManager: WallpaperManager
     @EnvironmentObject var themeManager: ThemeManager
     @State private var searchText = ""
+    @State private var isLoading = false
+    @State private var error: Error?
+    @State private var showError = false
     
     var filteredWallpapers: [WallpaperItem] {
         if searchText.isEmpty {
@@ -100,25 +107,50 @@ struct WallpaperGridView: View {
             SearchBar(text: $searchText)
                 .padding()
             
-            ScrollView {
-                LazyVGrid(columns: [
-                    GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)
-                ], spacing: 16) {
-                    ForEach(filteredWallpapers) { wallpaper in
-                        WallpaperThumbnailView(wallpaper: wallpaper)
-                            .themedBorder()
+            if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: [
+                        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)
+                    ], spacing: 16) {
+                        ForEach(filteredWallpapers) { wallpaper in
+                            WallpaperThumbnailView(wallpaper: wallpaper)
+                                .themedBorder()
+                        }
                     }
+                    .padding()
                 }
-                .padding()
             }
         }
         .themedBackground()
+        .alert("Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(error?.localizedDescription ?? "Unknown error")
+        }
+        .task {
+            await loadWallpapers()
+        }
+    }
+    
+    private func loadWallpapers() async {
+        isLoading = true
+        do {
+            try await wallpaperManager.loadWallpapers()
+        } catch {
+            self.error = error
+            showError = true
+        }
+        isLoading = false
     }
 }
 
 struct SearchBar: View {
     @Binding var text: String
     @EnvironmentObject var themeManager: ThemeManager
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         HStack {
@@ -128,6 +160,7 @@ struct SearchBar: View {
             TextField("Search", text: $text)
                 .textFieldStyle(PlainTextFieldStyle())
                 .themedText()
+                .focused($isFocused)
             
             if !text.isEmpty {
                 Button(action: {
@@ -143,55 +176,5 @@ struct SearchBar: View {
         .background(themeManager.theme.backgroundColor)
         .cornerRadius(8)
         .themedBorder()
-    }
-}
-
-struct WallpaperThumbnailView: View {
-    let wallpaper: WallpaperItem
-    @EnvironmentObject var themeManager: ThemeManager
-    @State private var isHovered = false
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            AsyncImage(url: URL(fileURLWithPath: wallpaper.filePath)) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView()
-                        .frame(height: 150)
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 150)
-                        .clipped()
-                case .failure:
-                    Image(systemName: "photo")
-                        .frame(height: 150)
-                @unknown default:
-                    EmptyView()
-                }
-            }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(wallpaper.name)
-                    .themedText()
-                    .lineLimit(1)
-                
-                Text(wallpaper.filePath)
-                    .themedSecondaryText()
-                    .font(.caption)
-                    .lineLimit(1)
-            }
-            .padding(8)
-        }
-        .background(themeManager.theme.backgroundColor)
-        .cornerRadius(8)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(themeManager.theme.borderColor, lineWidth: isHovered ? 2 : 1)
-        )
-        .onHover { hovering in
-            isHovered = hovering
-        }
     }
 }

@@ -106,6 +106,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				885F3B522DA63F8E0082C57A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				88EF7BA52D4D65510011AD43 /* Background Changer */,
@@ -195,6 +196,9 @@
 			);
 			mainGroup = 88EF7B9A2D4D65510011AD43;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				884906CA2DA63E81004CBE00 /* XCLocalSwiftPackageReference "Wallpaper" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 88EF7BA42D4D65510011AD43 /* Products */;
 			projectDirPath = "";
@@ -256,6 +260,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		885F3B522DA63F8E0082C57A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 885F3B512DA63F8E0082C57A /* Wallpaper */;
+		};
 		88EF7BB62D4D65530011AD43 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 88EF7BA22D4D65510011AD43 /* Background Changer */;
@@ -541,6 +549,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		884906CA2DA63E81004CBE00 /* XCLocalSwiftPackageReference "Wallpaper" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Wallpaper;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		885F3B512DA63F8E0082C57A /* Wallpaper */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 884906CA2DA63E81004CBE00 /* XCLocalSwiftPackageReference "Wallpaper" */;
+			productName = Wallpaper;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 88EF7B9B2D4D65510011AD43 /* Project object */;
 }

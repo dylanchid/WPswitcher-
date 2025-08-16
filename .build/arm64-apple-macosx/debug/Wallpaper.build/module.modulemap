@@ -1,0 +1,4 @@
+module Wallpaper {
+    header "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Wallpaper-Swift.h"
+    requires objc
+}

@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:WPswitcher+}",
+            "name": "Debug BackgroundChanger",
+            "program": "${workspaceFolder:WPswitcher+}/.build/debug/BackgroundChanger",
+            "preLaunchTask": "swift: Build Debug BackgroundChanger"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:WPswitcher+}",
+            "name": "Release BackgroundChanger",
+            "program": "${workspaceFolder:WPswitcher+}/.build/release/BackgroundChanger",
+            "preLaunchTask": "swift: Build Release BackgroundChanger"
+        }
+    ]
+}

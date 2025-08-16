@@ -10,89 +10,8 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                if let (currentURL, currentScreen) = wallpaperManager.getCurrentSystemWallpaper() {
-                    HStack(alignment: .top, spacing: 20) {
-                        // Left side - Wallpaper preview
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Current Wallpaper")
-                                .font(.headline)
-                                .accessibilityAddTraits(.isHeader)
-                            
-                            if let image = NSImage(contentsOf: currentURL) {
-                                Image(nsImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(height: 150)
-                                    .frame(maxWidth: .infinity)
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
-                                    )
-                                    .accessibilityLabel("Current wallpaper preview")
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        
-                        // Right side - Display settings
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Display Settings")
-                                .font(.headline)
-                                .accessibilityAddTraits(.isHeader)
-                            
-                            Picker("Display Mode", selection: $wallpaperManager.displayMode) {
-                                ForEach(DisplayMode.allCases, id: \.self) { mode in
-                                    Text(mode.rawValue).tag(mode)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .accessibilityLabel("Display mode picker")
-                            
-                            Toggle("Show on All Spaces", isOn: $wallpaperManager.showOnAllSpaces)
-                                .accessibilityLabel("Show wallpaper on all spaces toggle")
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .padding()
-                    .background(Color(.windowBackgroundColor).opacity(0.5))
-                    .cornerRadius(10)
-                } else {
-                    VStack(spacing: 16) {
-                        Text("No wallpaper selected")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                            .accessibilityAddTraits(.isHeader)
-                        
-                        Button(action: selectWallpaper) {
-                            Label("Choose Wallpaper", systemImage: "photo.on.rectangle")
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .accessibilityLabel("Choose wallpaper button")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(.windowBackgroundColor).opacity(0.5))
-                    .cornerRadius(10)
-                }
-                
-                // Wallpaper list
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Wallpapers")
-                        .font(.headline)
-                        .accessibilityAddTraits(.isHeader)
-                    
-                    LazyVGrid(columns: [
-                        GridItem(.adaptive(minimum: 60, maximum: 60), spacing: 8)
-                    ], spacing: 8) {
-                        ForEach(wallpaperManager.allWallpapers) { wallpaper in
-                            WallpaperThumbnailView(wallpaper: wallpaper)
-                                .accessibilityLabel("Wallpaper thumbnail: \(wallpaper.name)")
-                        }
-                    }
-                }
-                .padding()
-                .background(Color(.windowBackgroundColor).opacity(0.5))
-                .cornerRadius(10)
+                CurrentWallpaperSection(wallpaperManager: wallpaperManager)
+                WallpaperGridSection(wallpaperManager: wallpaperManager)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding()
@@ -136,6 +55,124 @@ struct HomeView: View {
         } else {
             isLoading = false
         }
+    }
+}
+
+// MARK: - Current Wallpaper Section
+struct CurrentWallpaperSection: View {
+    @ObservedObject var wallpaperManager: WallpaperManager
+    
+    var body: some View {
+        if let (currentURL, currentScreen) = wallpaperManager.getCurrentSystemWallpaper() {
+            HStack(alignment: .top, spacing: 20) {
+                WallpaperPreviewView(url: currentURL)
+                DisplaySettingsView(wallpaperManager: wallpaperManager)
+            }
+            .padding()
+            .background(Color(.windowBackgroundColor).opacity(0.5))
+            .cornerRadius(10)
+        } else {
+            NoWallpaperView(selectWallpaper: { wallpaperManager.selectWallpaper() })
+        }
+    }
+}
+
+struct WallpaperPreviewView: View {
+    let url: URL
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Current Wallpaper")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+            
+            if let image = NSImage(contentsOf: url) {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 150)
+                    .frame(maxWidth: .infinity)
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                    )
+                    .accessibilityLabel("Current wallpaper preview")
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct DisplaySettingsView: View {
+    @ObservedObject var wallpaperManager: WallpaperManager
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Display Settings")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+            
+            Picker("Display Mode", selection: $wallpaperManager.displayMode) {
+                ForEach(DisplayMode.allCases, id: \.self) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.menu)
+            .accessibilityLabel("Display mode picker")
+            
+            Toggle("Show on All Spaces", isOn: $wallpaperManager.showOnAllSpaces)
+                .accessibilityLabel("Show wallpaper on all spaces toggle")
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct NoWallpaperView: View {
+    let selectWallpaper: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("No wallpaper selected")
+                .font(.headline)
+                .foregroundColor(.secondary)
+                .accessibilityAddTraits(.isHeader)
+            
+            Button(action: selectWallpaper) {
+                Label("Choose Wallpaper", systemImage: "photo.on.rectangle")
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityLabel("Choose wallpaper button")
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color(.windowBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+    }
+}
+
+// MARK: - Wallpaper Grid Section
+struct WallpaperGridSection: View {
+    @ObservedObject var wallpaperManager: WallpaperManager
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Wallpapers")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+            
+            LazyVGrid(columns: [
+                GridItem(.adaptive(minimum: 60, maximum: 60), spacing: 8)
+            ], spacing: 8) {
+                ForEach(wallpaperManager.allWallpapers) { wallpaper in
+                    WallpaperThumbnailView(wallpaper: wallpaper)
+                        .accessibilityLabel("Wallpaper thumbnail: \(wallpaper.name)")
+                }
+            }
+        }
+        .padding()
+        .background(Color(.windowBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
     }
 }
 

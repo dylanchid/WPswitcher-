@@ -1,14 +1,19 @@
 import XCTest
 import AppKit
 @testable import Background_Changer
+import Wallpaper
 
 class PerformanceTests: XCTestCase {
     var testImages: [NSImage]!
     var testURLs: [URL]!
     var wallpaperManager: WallpaperManager!
+    var wallpaperService: WallpaperServiceProtocol!
+    var cacheService: CacheServiceProtocol!
     
     override func setUp() {
         super.setUp()
+        wallpaperService = UnifiedWallpaperService()
+        cacheService = UnifiedCacheService()
         wallpaperManager = WallpaperManager.shared
         wallpaperManager.clearWallpapers()
         
@@ -37,6 +42,7 @@ class PerformanceTests: XCTestCase {
             try? FileManager.default.removeItem(at: url)
         }
         wallpaperManager.clearWallpapers()
+        cacheService.clearCache()
         super.tearDown()
     }
     
@@ -80,7 +86,7 @@ class PerformanceTests: XCTestCase {
                 await withTaskGroup(of: Void.self) { group in
                     for wallpaper in wallpaperManager.allWallpapers {
                         group.addTask {
-                            try? await wallpaper.loadMetadata()
+                            _ = try? await wallpaperService.loadMetadata(for: wallpaper.fileURL)
                         }
                     }
                 }
@@ -112,7 +118,7 @@ class PerformanceTests: XCTestCase {
                 await withTaskGroup(of: Void.self) { group in
                     for wallpaper in wallpaperManager.allWallpapers {
                         group.addTask {
-                            try? await wallpaper.loadImage()
+                            _ = try? await wallpaperService.loadImage(from: wallpaper.fileURL)
                         }
                     }
                 }
@@ -132,8 +138,8 @@ class PerformanceTests: XCTestCase {
             do {
                 try await wallpaperManager.addWallpapers(testURLs)
                 for wallpaper in wallpaperManager.allWallpapers {
-                    _ = try? await wallpaper.loadMetadata()
-                    _ = try? await wallpaper.loadImage()
+                    _ = try? await wallpaperService.loadMetadata(for: wallpaper.fileURL)
+                    _ = try? await wallpaperService.loadImage(from: wallpaper.fileURL)
                 }
                 expectation.fulfill()
             } catch {
@@ -145,20 +151,20 @@ class PerformanceTests: XCTestCase {
         // Then measure cache hit performance
         measure {
             for wallpaper in wallpaperManager.allWallpapers {
-                _ = wallpaper.metadata
-                _ = try? wallpaper.loadImage()
+                _ = cacheService.getMetadata(for: wallpaper.fileURL)
+                _ = cacheService.getImage(for: wallpaper.fileURL)
             }
         }
     }
     
     func testCacheMissPerformance() {
         // Clear cache
-        WallpaperCache.shared.clearCache()
+        cacheService.clearCache()
         
         measure {
             for url in testURLs {
-                _ = WallpaperCache.shared.getMetadata(for: url)
-                _ = WallpaperCache.shared.getImage(for: url)
+                _ = cacheService.getMetadata(for: url)
+                _ = cacheService.getImage(for: url)
             }
         }
     }

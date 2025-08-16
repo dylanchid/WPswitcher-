@@ -10,88 +10,31 @@ struct MenuBarView: View {
     @State private var showingCreatePlaylist = false
     @State private var showingEditPlaylist = false
     @State private var selectedPlaylist: Playlist?
+    @State private var error: Error?
+    @State private var showError = false
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Text("Background Changer")
-                    .font(.headline)
-                    .themedText()
-                Spacer()
-                Button(action: {
-                    NSApp.sendAction(#selector(NSApp.terminate(_:)), to: nil, from: nil)
-                }) {
-                    Image(systemName: "xmark")
-                        .foregroundColor(themeManager.theme.secondaryTextColor)
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-            .padding()
-            .background(themeManager.theme.backgroundColor)
+            MenuBarHeaderView()
             
             Divider()
                 .background(themeManager.theme.borderColor)
             
-            // Quick Actions
-            VStack(spacing: 8) {
-                QuickActionButton(
-                    title: "Next Wallpaper",
-                    icon: "arrow.right",
-                    action: { wallpaperManager.nextWallpaper() }
-                )
-                
-                QuickActionButton(
-                    title: "Previous Wallpaper",
-                    icon: "arrow.left",
-                    action: { wallpaperManager.previousWallpaper() }
-                )
-                
-                QuickActionButton(
-                    title: "Random Wallpaper",
-                    icon: "shuffle",
-                    action: { wallpaperManager.randomWallpaper() }
-                )
-            }
-            .padding()
+            QuickActionsView(wallpaperManager: wallpaperManager)
             
             Divider()
                 .background(themeManager.theme.borderColor)
             
-            // Playlists
-            ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(wallpaperManager.userProfile.playlists) { playlist in
-                        PlaylistMenuItem(playlist: playlist)
-                    }
-                }
-                .padding()
-            }
+            PlaylistListView(
+                playlists: wallpaperManager.userProfile.playlists,
+                selectedPlaylist: $selectedPlaylist,
+                showingEditPlaylist: $showingEditPlaylist
+            )
             
             Divider()
                 .background(themeManager.theme.borderColor)
             
-            // Settings
-            HStack {
-                Button(action: {
-                    NotificationCenter.default.post(name: .openSettings, object: nil)
-                }) {
-                    Label("Settings", systemImage: "gear")
-                        .themedText()
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-                Spacer()
-                
-                Button(action: {
-                    NotificationCenter.default.post(name: .openMainWindow, object: nil)
-                }) {
-                    Label("Open Main Window", systemImage: "window")
-                        .themedText()
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-            .padding()
+            MenuBarFooterView()
         }
         .frame(width: 300)
         .themedBackground()
@@ -103,9 +46,136 @@ struct MenuBarView: View {
                 EditPlaylistView(wallpaperManager: wallpaperManager, playlist: playlist)
             }
         }
+        .alert("Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(error?.localizedDescription ?? "Unknown error")
+        }
     }
 }
 
+// MARK: - Menu Bar Header
+struct MenuBarHeaderView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    
+    var body: some View {
+        HStack {
+            Text("Background Changer")
+                .font(.headline)
+                .themedText()
+            Spacer()
+            Button(action: {
+                NSApp.sendAction(#selector(NSApp.terminate(_:)), to: nil, from: nil)
+            }) {
+                Image(systemName: "xmark")
+                    .foregroundColor(themeManager.theme.secondaryTextColor)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding()
+        .background(themeManager.theme.backgroundColor)
+    }
+}
+
+// MARK: - Quick Actions
+struct QuickActionsView: View {
+    @ObservedObject var wallpaperManager: WallpaperManager
+    @EnvironmentObject var themeManager: ThemeManager
+    @State private var error: Error?
+    @State private var showError = false
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            QuickActionButton(
+                title: "Next Wallpaper",
+                icon: "arrow.right",
+                action: { performAction(wallpaperManager.nextWallpaper) }
+            )
+            
+            QuickActionButton(
+                title: "Previous Wallpaper",
+                icon: "arrow.left",
+                action: { performAction(wallpaperManager.previousWallpaper) }
+            )
+            
+            QuickActionButton(
+                title: "Random Wallpaper",
+                icon: "shuffle",
+                action: { performAction(wallpaperManager.randomWallpaper) }
+            )
+        }
+        .padding()
+        .alert("Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(error?.localizedDescription ?? "Unknown error")
+        }
+    }
+    
+    private func performAction(_ action: () throws -> Void) {
+        do {
+            try action()
+        } catch {
+            self.error = error
+            showError = true
+        }
+    }
+}
+
+// MARK: - Playlist List
+struct PlaylistListView: View {
+    let playlists: [Playlist]
+    @Binding var selectedPlaylist: Playlist?
+    @Binding var showingEditPlaylist: Bool
+    @EnvironmentObject var themeManager: ThemeManager
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(playlists) { playlist in
+                    PlaylistMenuItem(
+                        playlist: playlist,
+                        onEdit: {
+                            selectedPlaylist = playlist
+                            showingEditPlaylist = true
+                        }
+                    )
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - Menu Bar Footer
+struct MenuBarFooterView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    
+    var body: some View {
+        HStack {
+            Button(action: {
+                NotificationCenter.default.post(name: .openSettings, object: nil)
+            }) {
+                Label("Settings", systemImage: "gear")
+                    .themedText()
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            Spacer()
+            
+            Button(action: {
+                NotificationCenter.default.post(name: .openMainWindow, object: nil)
+            }) {
+                Label("Open Main Window", systemImage: "window")
+                    .themedText()
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding()
+    }
+}
+
+// MARK: - Quick Action Button
 struct QuickActionButton: View {
     let title: String
     let icon: String
@@ -133,8 +203,10 @@ struct QuickActionButton: View {
     }
 }
 
+// MARK: - Playlist Menu Item
 struct PlaylistMenuItem: View {
-    @ObservedObject var playlist: Playlist
+    @ObservedObject var playlist: PlaylistEntity
+    let onEdit: () -> Void
     @EnvironmentObject var themeManager: ThemeManager
     @State private var isHovered = false
     
@@ -157,6 +229,12 @@ struct PlaylistMenuItem: View {
                     .foregroundColor(themeManager.theme.accentColor)
             }
             .buttonStyle(PlainButtonStyle())
+            
+            Button(action: onEdit) {
+                Image(systemName: "pencil")
+                    .foregroundColor(themeManager.theme.secondaryTextColor)
+            }
+            .buttonStyle(PlainButtonStyle())
         }
         .padding(8)
         .background(isHovered ? themeManager.theme.highlightColor : Color.clear)
@@ -171,7 +249,8 @@ struct PlaylistMenuItem: View {
 struct MenuBarView_Previews: PreviewProvider {
     static var previews: some View {
         MenuBarView()
-            .environmentObject(AppState())
+            .environmentObject(WallpaperManager.shared)
+            .environmentObject(ThemeManager.shared)
             .preferredColorScheme(.dark)
     }
 } 

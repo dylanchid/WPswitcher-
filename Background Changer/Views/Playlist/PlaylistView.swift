@@ -19,7 +19,13 @@ struct PlaylistView: View {
             headerView
             
             if viewModel.isExpanded {
-                wallpaperGridView
+                if viewModel.playlist.wallpapers.isEmpty {
+                    Text("No wallpapers in this playlist. Click '+' to add some.")
+                        .foregroundColor(.secondary)
+                        .padding()
+                } else {
+                    wallpaperGridView
+                }
             }
         }
         .padding()
@@ -56,6 +62,32 @@ struct PlaylistView: View {
             Spacer()
             
             HStack(spacing: 12) {
+                Button(action: {
+                    do {
+                        try viewModel.wallpaperManager.undo()
+                    } catch {
+                        viewModel.showError("Failed to undo: \(error.localizedDescription)")
+                    }
+                }) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .foregroundColor(viewModel.wallpaperManager.currentVersionIndex >= 0 ? .blue : .gray)
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.wallpaperManager.currentVersionIndex < 0)
+                
+                Button(action: {
+                    do {
+                        try viewModel.wallpaperManager.redo()
+                    } catch {
+                        viewModel.showError("Failed to redo: \(error.localizedDescription)")
+                    }
+                }) {
+                    Image(systemName: "arrow.uturn.forward")
+                        .foregroundColor(viewModel.wallpaperManager.currentVersionIndex < viewModel.wallpaperManager.versionHistory.count - 1 ? .blue : .gray)
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.wallpaperManager.currentVersionIndex >= viewModel.wallpaperManager.versionHistory.count - 1)
+                
                 Button(action: { viewModel.showingImagePicker = true }) {
                     Image(systemName: "plus.circle")
                         .foregroundColor(.blue)
@@ -133,8 +165,7 @@ struct PlaylistView: View {
             
             let targetIndex = viewModel.dropTargetIndex ?? viewModel.playlist.wallpapers.count
             viewModel.moveWallpaper(
-                from: viewModel.playlist,
-                at: sourceIndex,
+                from: sourceIndex,
                 to: targetIndex
             )
             

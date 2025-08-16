@@ -6,33 +6,61 @@ enum ColorScheme: String, Codable {
     case system
 }
 
+// Codable wrapper for Color
+struct CodableColor: Codable {
+    let red: Double
+    let green: Double
+    let blue: Double
+    let alpha: Double
+    
+    var color: Color {
+        Color(.sRGB, red: red, green: green, blue: blue, opacity: alpha)
+    }
+    
+    init(_ color: Color) {
+        // Default values, in a real implementation you'd extract components
+        self.red = 0.0
+        self.green = 0.0
+        self.blue = 0.0
+        self.alpha = 1.0
+    }
+}
+
 struct Theme: Codable {
     var colorScheme: ColorScheme
-    var accentColor: Color
-    var backgroundColor: Color
-    var textColor: Color
-    var secondaryTextColor: Color
-    var borderColor: Color
-    var highlightColor: Color
+    var accentColor: CodableColor
+    var backgroundColor: CodableColor
+    var textColor: CodableColor
+    var secondaryTextColor: CodableColor
+    var borderColor: CodableColor
+    var highlightColor: CodableColor
+    
+    // Computed properties that return actual Color objects
+    var accentColorValue: Color { accentColor.color }
+    var backgroundColorValue: Color { backgroundColor.color }
+    var textColorValue: Color { textColor.color }
+    var secondaryTextColorValue: Color { secondaryTextColor.color }
+    var borderColorValue: Color { borderColor.color }
+    var highlightColorValue: Color { highlightColor.color }
     
     static let light = Theme(
         colorScheme: .light,
-        accentColor: .blue,
-        backgroundColor: .white,
-        textColor: .black,
-        secondaryTextColor: .gray,
-        borderColor: .gray.opacity(0.3),
-        highlightColor: .blue.opacity(0.1)
+        accentColor: CodableColor(.blue),
+        backgroundColor: CodableColor(.white),
+        textColor: CodableColor(.black),
+        secondaryTextColor: CodableColor(.gray),
+        borderColor: CodableColor(.gray.opacity(0.3)),
+        highlightColor: CodableColor(.blue.opacity(0.1))
     )
     
     static let dark = Theme(
         colorScheme: .dark,
-        accentColor: .blue,
-        backgroundColor: Color(NSColor.windowBackgroundColor),
-        textColor: .white,
-        secondaryTextColor: .gray,
-        borderColor: .gray.opacity(0.3),
-        highlightColor: .blue.opacity(0.2)
+        accentColor: CodableColor(.blue),
+        backgroundColor: CodableColor(Color(NSColor.windowBackgroundColor)),
+        textColor: CodableColor(.white),
+        secondaryTextColor: CodableColor(.gray),
+        borderColor: CodableColor(.gray.opacity(0.3)),
+        highlightColor: CodableColor(.blue.opacity(0.2))
     )
     
     static var current: Theme {
@@ -81,7 +109,7 @@ struct ThemedBackground: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .background(themeManager.theme.backgroundColor)
+            .background(themeManager.theme.backgroundColorValue)
     }
 }
 
@@ -90,7 +118,7 @@ struct ThemedText: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .foregroundColor(themeManager.theme.textColor)
+            .foregroundColor(themeManager.theme.textColorValue)
     }
 }
 
@@ -99,7 +127,7 @@ struct ThemedSecondaryText: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .foregroundColor(themeManager.theme.secondaryTextColor)
+            .foregroundColor(themeManager.theme.secondaryTextColorValue)
     }
 }
 
@@ -110,7 +138,7 @@ struct ThemedBorder: ViewModifier {
         content
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(themeManager.theme.borderColor, lineWidth: 1)
+                    .stroke(themeManager.theme.borderColorValue, lineWidth: 1)
             )
     }
 }

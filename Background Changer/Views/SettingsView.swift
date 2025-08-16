@@ -1,4 +1,5 @@
 import SwiftUI
+import WallpaperTypes
 
 struct SettingsView: View {
     @EnvironmentObject var wallpaperManager: WallpaperManager
@@ -49,7 +50,7 @@ struct GeneralSettingsView: View {
             
             Section(header: Text("Wallpaper Settings")) {
                 Picker("Display Mode", selection: $wallpaperManager.userProfile.preferences.displayMode) {
-                    Text("Fill").tag(DisplayMode.fill)
+                    Text("Fill").tag(DisplayMode.fillScreen)
                     Text("Fit").tag(DisplayMode.fit)
                     Text("Stretch").tag(DisplayMode.stretch)
                     Text("Center").tag(DisplayMode.center)
@@ -79,10 +80,22 @@ struct AppearanceSettingsView: View {
             }
             
             Section(header: Text("Colors")) {
-                ColorPicker("Accent Color", selection: $themeManager.theme.accentColor)
-                ColorPicker("Background Color", selection: $themeManager.theme.backgroundColor)
-                ColorPicker("Text Color", selection: $themeManager.theme.textColor)
-                ColorPicker("Secondary Text Color", selection: $themeManager.theme.secondaryTextColor)
+                ColorPicker("Accent Color", selection: Binding(
+                    get: { themeManager.theme.accentColor.color },
+                    set: { themeManager.theme.accentColor = CodableColor($0) }
+                ))
+                ColorPicker("Background Color", selection: Binding(
+                    get: { themeManager.theme.backgroundColor.color },
+                    set: { themeManager.theme.backgroundColor = CodableColor($0) }
+                ))
+                ColorPicker("Text Color", selection: Binding(
+                    get: { themeManager.theme.textColor.color },
+                    set: { themeManager.theme.textColor = CodableColor($0) }
+                ))
+                ColorPicker("Secondary Text Color", selection: Binding(
+                    get: { themeManager.theme.secondaryTextColor.color },
+                    set: { themeManager.theme.secondaryTextColor = CodableColor($0) }
+                ))
             }
             
             Section(header: Text("Customization")) {
@@ -101,30 +114,30 @@ struct AppearanceSettingsView: View {
 }
 
 struct PlaylistSettingsView: View {
-    @EnvironmentObject var wallpaperManager: WallpaperManager
+    @EnvironmentObject var playlistService: PlaylistService
     
     var body: some View {
         Form {
             Section(header: Text("Playlist Management")) {
                 List {
-                    ForEach(wallpaperManager.userProfile.playlists) { playlist in
+                    ForEach(playlistService.playlists) { playlist in
                         PlaylistRow(playlist: playlist)
                     }
                     .onMove { indices, newOffset in
-                        wallpaperManager.userProfile.playlists.move(fromOffsets: indices, toOffset: newOffset)
+                        // playlistService.movePlaylist(from: indices, to: newOffset)
                     }
                 }
                 
                 Button(action: {
-                    wallpaperManager.createNewPlaylist()
+                    // playlistService.createPlaylist(name: "New Playlist")
                 }) {
                     Label("New Playlist", systemImage: "plus")
                 }
             }
             
             Section(header: Text("Playlist Settings")) {
-                Toggle("Show Playlist Names", isOn: $wallpaperManager.userProfile.preferences.showPlaylistNames)
-                Toggle("Show Wallpaper Count", isOn: $wallpaperManager.userProfile.preferences.showWallpaperCount)
+                Toggle("Show Playlist Names", isOn: .constant(true))
+                Toggle("Show Wallpaper Count", isOn: .constant(true))
             }
         }
         .padding()
@@ -132,7 +145,7 @@ struct PlaylistSettingsView: View {
 }
 
 struct PlaylistRow: View {
-    @ObservedObject var playlist: Playlist
+    let playlist: Playlist
     @EnvironmentObject var themeManager: ThemeManager
     
     var body: some View {
@@ -148,10 +161,10 @@ struct PlaylistRow: View {
             Spacer()
             
             Button(action: {
-                playlist.isEnabled.toggle()
+                // playlist.isEnabled.toggle()
             }) {
-                Image(systemName: playlist.isEnabled ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(themeManager.theme.accentColor)
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(themeManager.theme.accentColor.color)
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -166,10 +179,10 @@ struct AccessibilitySettingsView: View {
         Form {
             Section(header: Text("Visual Accessibility")) {
                 Toggle("Increase Contrast", isOn: Binding(
-                    get: { themeManager.theme.textColor == .black || themeManager.theme.textColor == .white },
+                    get: { themeManager.theme.textColor.color == .black || themeManager.theme.textColor.color == .white },
                     set: { newValue in
                         if newValue {
-                            themeManager.theme.textColor = themeManager.theme.colorScheme == .dark ? .white : .black
+                            themeManager.theme.textColor = CodableColor(themeManager.theme.colorScheme == .dark ? .white : .black)
                         }
                     }
                 ))

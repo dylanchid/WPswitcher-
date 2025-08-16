@@ -1,22 +1,24 @@
 import SwiftUI
+import Wallpaper
+import WallpaperTypes
 
 struct EditPlaylistView: View {
     @Environment(\.dismiss) private var dismiss
     let wallpaperManager: WallpaperManager
-    let playlist: Playlist
+    let playlist: Wallpaper.Playlist
     
     @State private var playlistName: String
     @State private var duration: Double
-    @State private var playbackMode: PlaybackMode
+    @State private var playbackMode: Wallpaper.PlaybackMode
     @State private var showError = false
     @State private var errorMessage: String?
     @State private var isErrorPresented = false
     
-    init(wallpaperManager: WallpaperManager, playlist: Playlist) {
+    init(wallpaperManager: WallpaperManager, playlist: Wallpaper.Playlist) {
         self.wallpaperManager = wallpaperManager
         self.playlist = playlist
         _playlistName = State(initialValue: playlist.name)
-        _duration = State(initialValue: 60)
+        _duration = State(initialValue: playlist.rotationInterval)
         _playbackMode = State(initialValue: playlist.playbackMode)
     }
     
@@ -49,6 +51,7 @@ struct EditPlaylistView: View {
                 Picker("", selection: $playbackMode) {
                     Text("Sequential").tag(PlaybackMode.sequential)
                     Text("Random").tag(PlaybackMode.random)
+                    Text("Shuffle").tag(PlaybackMode.shuffle)
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .frame(width: 250)
@@ -84,6 +87,16 @@ struct EditPlaylistView: View {
         do {
             try wallpaperManager.renamePlaylist(id: playlist.id, newName: playlistName)
             dismiss()
+        } catch let error as WallpaperTypes.WallpaperError {
+            showError = true
+            switch error {
+            case .invalidPlaylistOperation(let message):
+                errorMessage = message
+            case .playlistNotFound(let id):
+                errorMessage = "Playlist with ID \(id) not found."
+            default:
+                errorMessage = error.localizedDescription
+            }
         } catch {
             showError = true
             errorMessage = error.localizedDescription

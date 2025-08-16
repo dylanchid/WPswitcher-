@@ -9,232 +9,277 @@
 import Cocoa
 import SwiftUI
 import Wallpaper
+import WallpaperTypes
+import OSLog
 
-@main
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
-    private var statusItem: NSStatusItem?
-    private var wallpaperManager: WallpaperManager!
-    private var window: NSWindow?
-    @ObservedObject var appState = AppState()
-    @StateObject var themeManager = ThemeManager()
-    private var keyboardMonitor: Any?
+    // MARK: - Properties
+    private let logger = Logger(subsystem: "com.backgroundchanger", category: "app")
+    private var statusItemManager: StatusItemManager?
+    private var windowManager: WindowManager?
+    private var keyboardMonitor: KeyboardMonitor?
+    private var wallpaperManager: WallpaperManager = WallpaperManager.create()
+    private let themeManager = ThemeManager()
     
-    func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Initialize WallpaperManager with dependencies
-        wallpaperManager = WallpaperManager.create()
+    // MARK: - NSApplicationDelegate
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        logger.info("Application did finish launching")
         
-        // Setup menu bar item
         setupStatusItem()
+        setupWindowManager()
+        setupKeyboardMonitor()
         
         // Check for migration needs
         Task {
             do {
                 try await MigrationManager.shared.checkForMigration()
             } catch {
-                // Handle migration error
-                print("Migration failed: \(error.localizedDescription)")
+                logger.error("Migration failed: \(error.localizedDescription)")
+                handleError(error)
             }
         }
         
-        // Create popover UI with proper size constraints
-        let popover = NSPopover()
-        popover.contentSize = NSSize(width: 650, height: 400)
-        popover.behavior = .transient
-        popover.animates = true
-        popover.contentViewController = NSHostingController(
-            rootView: MenuBarView()
-                .environmentObject(appState)
-                .environmentObject(themeManager)
-        )
-        
-        // Create main window
-        createMainWindow()
-        
-        // Setup keyboard monitoring
-        setupKeyboardMonitoring()
-        
-        // Setup notifications
-        setupNotifications()
-        
-        // Setup appearance monitoring
-        setupAppearanceMonitoring()
+        // Setup login/wake monitoring
+        setupLoginWakeMonitoring()
     }
     
-    private func setupAppearanceMonitoring() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleAppearanceChange),
-            name: NSApp.effectiveAppearanceDidChangeNotification,
-            object: nil
-        )
-    }
-    
-    @objc private func handleAppearanceChange() {
-        if themeManager.theme.colorScheme == .system {
-            themeManager.theme = Theme.current
-        }
-    }
-    
-    private func setupKeyboardMonitoring() {
-        keyboardMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self = self else { return event }
-            
-            // Check for custom shortcuts
-            for shortcut in WallpaperManager.shared.userProfile.preferences.customShortcuts {
-                if event.keyCode == shortcut.keyCode && event.modifierFlags.contains(shortcut.modifiers) {
-                    WallpaperManager.shared.handleKeyboardShortcut(shortcut)
-                    return nil
-                }
-            }
-            
-            return event
-        }
-    }
-    
-    private func setupNotifications() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(openSettings),
-            name: .openSettings,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(showMainWindow),
-            name: .openMainWindow,
-            object: nil
-        )
-    }
-    
-    func createMainWindow() {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "Background Changer"
-        window.center()
-        window.setFrameAutosaveName("Main Window")
-        window.contentView = NSHostingView(
-            rootView: MainAppView()
-                .environmentObject(appState)
-                .environmentObject(themeManager)
-        )
-        self.window = window
-    }
-    
-    func applicationWillTerminate(_ aNotification: Notification) {
-        // Cleanup
-        wallpaperManager.stopRotation()
-        
-        if let monitor = keyboardMonitor {
-            NSEvent.removeMonitor(monitor)
-        }
+    func applicationWillTerminate(_ notification: Notification) {
+        logger.info("Application will terminate")
+        cleanup()
     }
     
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
         return true
     }
     
-    // MARK: - Private Methods
+    // MARK: - Setup Methods
     
     private func setupStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        
-        if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "photo.on.rectangle", accessibilityDescription: "Background Changer")
-        }
-        
-        setupMenu()
+        statusItemManager = StatusItemManager.create()
+        statusItemManager?.delegate = self
+        statusItemManager?.setupStatusItem()
     }
     
-    private func setupMenu() {
-        let menu = NSMenu()
-        
-        // Add Wallpaper
-        menu.addItem(withTitle: "Add Wallpaper...", action: #selector(addWallpaper), keyEquivalent: "n")
-        
-        // Manage Playlists
-        menu.addItem(withTitle: "Manage Playlists...", action: #selector(managePlaylists), keyEquivalent: "p")
-        
-        // Settings
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(withTitle: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
-        
-        // Quit
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(withTitle: "Quit Background Changer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        
-        statusItem?.menu = menu
+    private func setupWindowManager() {
+        windowManager = WindowManager.create()
+        windowManager?.delegate = self
     }
     
-    @objc private func addWallpaper() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = true
-        panel.canChooseDirectories = false
-        panel.canChooseFiles = true
-        panel.allowedContentTypes = [.image]
-        
-        panel.begin { [weak self] response in
-            if response == .OK {
-                Task {
-                    await self?.wallpaperManager.addWallpapers(panel.urls)
-                }
+    private func setupKeyboardMonitor() {
+        keyboardMonitor = KeyboardMonitor.create()
+        keyboardMonitor?.delegate = self
+    }
+    
+    private func cleanup() {
+        keyboardMonitor?.stopMonitoring()
+        statusItemManager?.removeStatusItem()
+        statusItemManager = nil
+    }
+    
+    // MARK: - Private Methods
+    // Appearance monitoring handled by ThemeManager / system defaults for now
+    
+    private func setupLoginWakeMonitoring() {
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(handleLoginOrWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(handleLoginOrWake),
+            name: NSWorkspace.sessionDidBecomeActiveNotification,
+            object: nil
+        )
+    }
+    
+    private func handleError(_ error: Error) {
+        if let wallpaperError = error as? WallpaperTypes.WallpaperError {
+            logger.error("Wallpaper error: \(wallpaperError.localizedDescription)")
+            let title: String
+            let message: String
+            let suggestion: String
+
+            switch wallpaperError {
+            case .invalidScreen:
+                title = "Invalid Screen"
+                message = "The target screen is invalid."
+                suggestion = "Please ensure the target screen is valid."
+            case .setWallpaperFailed(let reason):
+                title = "Failed to Set Wallpaper"
+                message = reason
+                suggestion = "Ensure the image is valid and try again."
+            case .playlistNotFound:
+                title = "Playlist Not Found"
+                message = "The specified playlist could not be found."
+                suggestion = "Verify the playlist you selected still exists."
+            case .invalidURL(let msg):
+                title = "Invalid Wallpaper URL"
+                message = msg
+                suggestion = "Please ensure the file exists and you have permission to access it."
+            case .fileNotFound(let msg):
+                title = "File Not Found"
+                message = msg
+                suggestion = "Please verify the file exists and try again."
+            case .invalidImage(let msg):
+                title = "Invalid Image File"
+                message = msg
+                suggestion = "Please try with a different image file."
+            case .insufficientPermissions(let msg):
+                title = "Insufficient Permissions"
+                message = msg
+                suggestion = "Grant the necessary file access permissions in System Settings."
+            case .displayError(let msg):
+                title = "Display Error"
+                message = msg
+                suggestion = "Please check your display settings and try again."
+            case .rotationError(let msg):
+                title = "Rotation Error"
+                message = msg
+                suggestion = "Please check your rotation settings and try again."
+            case .playlistError(let msg):
+                title = "Playlist Error"
+                message = msg
+                suggestion = "Please check the playlist name or content."
+            case .metadataError(let msg):
+                title = "Metadata Error"
+                message = msg
+                suggestion = "The image file might be corrupted or unsupported."
+            case .networkError(let msg):
+                title = "Network Error"
+                message = msg
+                suggestion = "Check your internet connection and try again."
+            case .systemError(let underlying):
+                title = "System Error"
+                message = underlying.localizedDescription
+                suggestion = "Please try again later or contact support."
             }
-        }
-    }
-    
-    @objc private func managePlaylists() {
-        if window == nil {
-            window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
-                styleMask: [.titled, .closable, .miniaturizable, .resizable],
-                backing: .buffered,
-                defer: false
+            showError(title: title, message: message, suggestion: suggestion)
+        } else {
+            logger.error("System error: \(error.localizedDescription)")
+            showError(
+                title: "System Error",
+                message: error.localizedDescription,
+                suggestion: "Please try again or contact support if the issue persists."
             )
-            window?.center()
-            window?.setFrameAutosaveName("Main Window")
-            window?.title = "Background Changer"
-            
-            let contentView = PlaylistManagerView()
-                .environmentObject(wallpaperManager)
-            window?.contentView = NSHostingView(rootView: contentView)
         }
-        
-        window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
     }
     
-    @objc private func openSettings() {
-        if window == nil {
-            window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
-                styleMask: [.titled, .closable],
-                backing: .buffered,
-                defer: false
-            )
-            window?.center()
-            window?.setFrameAutosaveName("Settings Window")
-            window?.title = "Settings"
-            
-            let contentView = SettingsView()
-                .environmentObject(wallpaperManager)
-            window?.contentView = NSHostingView(rootView: contentView)
+    private func showError(title: String, message: String, suggestion: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = "\(message)\n\n\(suggestion)"
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+    
+    // MARK: - Actions
+    @objc private func handleAppearanceChange() {
+        // Theming logic is handled within ThemeManager
+    }
+
+    @objc private func handleLoginOrWake() {
+        logger.info("System did wake or login. Rotating wallpaper.")
+        do {
+            try wallpaperManager.rotateToNext()
+        } catch {
+            logger.error("Failed to rotate wallpaper: \(error.localizedDescription)")
         }
-        
-        window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+    }
+}
+
+// MARK: - StatusItemManagerDelegate
+extension AppDelegate: StatusItemManagerDelegate {
+    func statusItemManager(_ manager: StatusItemManager, didSelectAction action: StatusItemAction) {
+        switch action {
+        case .openMainWindow:
+            windowManager?.showMainWindow()
+        case .openSettings:
+            windowManager?.showSettingsWindow()
+        case .quit:
+            NSApplication.shared.terminate(nil)
+        }
     }
     
-    @objc func showMainWindow() {
-        window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+    func setWallpaper(from url: URL) async {
+        await wallpaperManager.setWallpaper(from: url)
     }
     
-    @objc func hideMainWindow() {
-        window?.orderOut(nil)
+    func startPlaylistRotation(playlistId: UUID, interval: TimeInterval) {
+        wallpaperManager.startPlaylistRotation(playlistId: playlistId, interval: interval)
+    }
+    
+    func updateSettings(_ settings: UserSettings) async {
+        wallpaperManager.updateDisplayMode(settings.defaultDisplayMode)
+    }
+    
+    func rotateToNext() {
+        try? wallpaperManager.rotateToNext()
+    }
+    
+    func rotateToPrevious() {
+        try? wallpaperManager.rotateToPrevious()
+    }
+    
+    func toggleRotation() {
+        if wallpaperManager.isRotating {
+            wallpaperManager.stopRotation()
+        } else {
+            wallpaperManager.startRotation(interval: wallpaperManager.rotationInterval)
+        }
+    }
+    
+    func undo() {
+        try? wallpaperManager.undo()
+    }
+    
+    func redo() {
+        try? wallpaperManager.redo()
+    }
+}
+
+// MARK: - WindowManagerDelegate
+extension AppDelegate: WindowManagerDelegate {
+    func windowManager(_ manager: WindowManager, didRequestWallpaperChange url: URL) {
+        Task {
+            await wallpaperManager.setWallpaper(from: url)
+        }
+    }
+    
+    func windowManager(_ manager: WindowManager, didRequestPlaylistRotation playlistId: UUID, interval: TimeInterval) {
+        wallpaperManager.startPlaylistRotation(playlistId: playlistId, interval: interval)
+    }
+    
+    func windowManager(_ manager: WindowManager, didRequestSettingsUpdate settings: UserSettings) {
+        Task {
+            await wallpaperManager.updateDisplayMode(settings.defaultDisplayMode)
+        }
+    }
+}
+
+// MARK: - KeyboardMonitorDelegate
+extension AppDelegate: KeyboardMonitorDelegate {
+    func keyboardMonitor(_ monitor: KeyboardMonitor, didDetectShortcut shortcut: KeyboardShortcut) {
+        switch shortcut.action {
+        case .nextWallpaper:
+            try? wallpaperManager.rotateToNext()
+        case .previousWallpaper:
+            try? wallpaperManager.rotateToPrevious()
+        case .toggleRotation:
+            if wallpaperManager.isRotating {
+                wallpaperManager.stopRotation()
+            } else {
+                wallpaperManager.startRotation(interval: wallpaperManager.rotationInterval)
+            }
+        case .showPreferences:
+            windowManager?.showSettingsWindow()
+        case .addWallpaper:
+            // Could trigger an open panel via StatusItemManager; for now, open main window
+            windowManager?.showMainWindow()
+        }
     }
 }
 

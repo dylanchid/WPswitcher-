@@ -1,0 +1,150 @@
+{
+  "version": "1.0",
+  "created": "2025-07-28",
+  "project": "Background Changer",
+  "description": "Memory storage for Background Changer macOS app development",
+  "memories": {
+    "project_info": {
+      "name": "Background Changer",
+      "type": "macOS SwiftUI Application",
+      "purpose": "Desktop wallpaper management with playlists and rotation",
+      "main_features": [
+        "Wallpaper rotation with configurable intervals",
+        "Playlist management for wallpaper collections",
+        "Menu bar integration",
+        "Multiple display support",
+        "Favorites and tagging system",
+        "File monitoring and caching"
+      ],
+      "architecture": "SwiftUI with MVVM pattern",
+      "key_components": {
+        "managers": ["WallpaperManager", "KeyboardMonitor", "StatusItemManager", "WindowManager"],
+        "services": ["PlaylistService", "UserSettingsService", "Persistence"],
+        "models": ["Wallpaper", "Playlist", "UserSettings", "Theme"],
+        "views": ["HomeView", "PlaylistsView", "SettingsView", "MenuBarView"]
+      }
+    },
+    "development_context": {
+      "language": "Swift",
+      "framework": "SwiftUI",
+      "platform": "macOS 11.0+",
+      "package_dependencies": ["Wallpaper (local package)"],
+      "entitlements": [
+        "com.apple.security.app-sandbox",
+        "com.apple.security.files.user-selected.read-write",
+        "com.apple.security.files.downloads.read-write",
+        "com.apple.security.files.pictures.read-write"
+      ]
+    },
+    "user_preferences": {
+      "coding_style": "Follow Apple's Human Interface Guidelines",
+      "architecture_preference": "Modular and reusable components",
+      "error_handling": "Safe and comprehensive error handling",
+      "ui_guidelines": "Native macOS menu bar application patterns"
+    },
+    "recent_work": {
+      "mcp_setup": {
+        "configured_servers": [
+          "figma", "playwright", "sentry", "deepwiki", 
+          "imagesorcery", "context7", "markitdown", 
+          "github", "codacy", "sequentialthinking", "memory"
+        ],
+        "removed_servers": ["stripe", "linear"],
+        "github_auth": "Configured with PAT input prompt"
+      },
+      "compilation_fixes": {
+        "date": "2025-07-28",
+        "major_issues_resolved": [
+          {
+            "file": "KeyboardMonitor.swift",
+            "issue": "Missing WallpaperManager methods and wrong delegate pattern",
+            "solution": "Converted to delegate pattern with KeyboardMonitorDelegate protocol",
+            "changes": [
+              "Added KeyboardMonitorDelegate protocol",
+              "Created ShortcutAction enum and Shortcut struct",
+              "Removed direct WallpaperManager dependency",
+              "AppDelegate now implements delegate pattern"
+            ]
+          },
+          {
+            "file": "MigrationManager.swift", 
+            "issue": "Wrong WallpaperError import, missing WallpaperManager.shared, incomplete MigrationStatus",
+            "solution": "Fixed imports and implemented proper migration structure",
+            "changes": [
+              "Added 'import Wallpaper' for WallpaperError",
+              "Changed MigrationStatus.idle to .notStarted",
+              "Added missing @unknown default case to switch",
+              "Removed WallpaperManager.shared dependencies (stubbed for now)"
+            ]
+          },
+          {
+            "file": "MigrationTypes.swift",
+            "issue": "Wrong WallpaperError type and duplicate KeyboardShortcut",
+            "solution": "Fixed type conflicts and removed duplicates",
+            "changes": [
+              "Fixed WallpaperError import from Wallpaper module",
+              "Removed duplicate KeyboardShortcut struct",
+              "Added proper Equatable implementation for MigrationStatus"
+            ]
+          },
+          {
+            "file": "UserSettingsService.swift",
+            "issue": "Syntax errors in array type declarations (missing closing brackets)",
+            "solution": "Fixed all array type syntax",
+            "changes": [
+              "Fixed [UUID> to [UUID]",
+              "Fixed [KeyboardShortcut> to [KeyboardShortcut]", 
+              "Fixed [URL> to [URL]"
+            ]
+          },
+          {
+            "file": "Models/Wallpaper/Playlist.swift",
+            "issue": "Type name conflicts between CoreData Playlist and Wallpaper module Playlist",
+            "solution": "Renamed CoreData model to avoid conflicts",
+            "changes": [
+              "Renamed @objc(Playlist) to @objc(PlaylistEntity)",
+              "Renamed class Playlist to PlaylistEntity",
+              "Renamed AppearanceMode to PlaylistAppearanceMode", 
+              "Renamed PlaybackMode to PlaylistPlaybackMode",
+              "Updated all references in WallpaperManager"
+            ]
+          },
+          {
+            "file": "WallpaperManager.swift",
+            "issue": "Corrupted enum structure causing syntax errors",
+            "solution": "Restored proper enum structure and fixed type references",
+            "changes": [
+              "Fixed RotationInterval enum syntax",
+              "Updated to use PlaylistEntity instead of Playlist",
+              "Added missing delegate methods for AppDelegate compatibility",
+              "Fixed all PlaylistEntity.fetchRequest() calls"
+            ]
+          }
+        ],
+        "remaining_issues": [
+          "DisplayMode type not found - need import or alias",
+          "WallpaperItem/WallpaperMetadata type conflicts",
+          "UserProfile type missing",
+          "SwiftUI Form syntax compatibility issues",
+          "WallpaperManager.shared pattern needed",
+          "Multiple View files referencing wrong types"
+        ],
+        "architecture_improvements": [
+          "Implemented proper delegate patterns for manager classes",
+          "Separated concerns between CoreData models and Wallpaper module types",
+          "Created type-safe shortcut system",
+          "Improved error handling in migration system"
+        ]
+      }
+    }
+  },
+  "notes": [
+    {
+      "date": "2025-07-28",
+      "topic": "Swift Compilation Fixes",
+      "content": "Successfully resolved major compilation errors in Background Changer project. Key architectural decisions: 1) Converted to delegate patterns for better separation of concerns, 2) Resolved type conflicts by renaming CoreData entities, 3) Fixed import issues between local Wallpaper module and main app. Next steps: resolve remaining DisplayMode conflicts and implement proper singleton patterns."
+    }
+  ],
+  "tags": ["swift", "swiftui", "macos", "wallpaper", "menu-bar-app"],
+  "last_updated": "2025-07-28"
+}

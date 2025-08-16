@@ -1,4 +1,5 @@
 import Foundation
+import WallpaperTypes
 
 struct Backup: Codable {
     let id: UUID
