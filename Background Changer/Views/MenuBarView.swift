@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
+import Wallpaper
 
 struct MenuBarView: View {
     @EnvironmentObject var wallpaperManager: WallpaperManager
@@ -9,7 +10,7 @@ struct MenuBarView: View {
     @State private var selectedTab: Int? = 1
     @State private var showingCreatePlaylist = false
     @State private var showingEditPlaylist = false
-    @State private var selectedPlaylist: Playlist?
+    @State private var selectedPlaylist: Wallpaper.Playlist?
     @State private var error: Error?
     @State private var showError = false
     
@@ -18,38 +19,39 @@ struct MenuBarView: View {
             MenuBarHeaderView()
             
             Divider()
-                .background(themeManager.theme.borderColor)
+                .background(themeManager.theme.borderColor.color)
             
             QuickActionsView(wallpaperManager: wallpaperManager)
             
             Divider()
-                .background(themeManager.theme.borderColor)
+                .background(themeManager.theme.borderColor.color)
             
             PlaylistListView(
-                playlists: wallpaperManager.userProfile.playlists,
+                playlists: wallpaperManager.userPlaylists,
                 selectedPlaylist: $selectedPlaylist,
                 showingEditPlaylist: $showingEditPlaylist
             )
             
             Divider()
-                .background(themeManager.theme.borderColor)
+                .background(themeManager.theme.borderColor.color)
             
             MenuBarFooterView()
         }
         .frame(width: 300)
         .themedBackground()
         .sheet(isPresented: $showingCreatePlaylist) {
-            CreatePlaylistView(wallpaperManager: wallpaperManager)
+            CreatePlaylistView()
         }
         .sheet(isPresented: $showingEditPlaylist) {
             if let playlist = selectedPlaylist {
-                EditPlaylistView(wallpaperManager: wallpaperManager, playlist: playlist)
+                EditPlaylistView(playlist: playlist)
             }
         }
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(error?.localizedDescription ?? "Unknown error")
+            let alert = error.map { ErrorPresenter.alertContent(for: $0) }
+            Text([alert?.message, alert?.suggestion].compactMap { $0 }.joined(separator: "\n\n"))
         }
     }
 }
@@ -68,12 +70,12 @@ struct MenuBarHeaderView: View {
                 NSApp.sendAction(#selector(NSApp.terminate(_:)), to: nil, from: nil)
             }) {
                 Image(systemName: "xmark")
-                    .foregroundColor(themeManager.theme.secondaryTextColor)
+                    .foregroundColor(themeManager.theme.secondaryTextColor.color)
             }
             .buttonStyle(PlainButtonStyle())
         }
         .padding()
-        .background(themeManager.theme.backgroundColor)
+        .background(themeManager.theme.backgroundColor.color)
     }
 }
 
@@ -89,43 +91,48 @@ struct QuickActionsView: View {
             QuickActionButton(
                 title: "Next Wallpaper",
                 icon: "arrow.right",
-                action: { performAction(wallpaperManager.nextWallpaper) }
+                action: { performAction { try wallpaperManager.nextWallpaper() } }
             )
             
             QuickActionButton(
                 title: "Previous Wallpaper",
                 icon: "arrow.left",
-                action: { performAction(wallpaperManager.previousWallpaper) }
+                action: { performAction { try wallpaperManager.previousWallpaper() } }
             )
             
             QuickActionButton(
                 title: "Random Wallpaper",
                 icon: "shuffle",
-                action: { performAction(wallpaperManager.randomWallpaper) }
+                action: { performAction { try wallpaperManager.randomWallpaper() } }
             )
         }
         .padding()
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(error?.localizedDescription ?? "Unknown error")
+            if let error = error {
+                let alert = ErrorPresenter.alertContent(for: error)
+                Text([alert.message, alert.suggestion].compactMap { $0 }.joined(separator: "\n\n"))
+            }
         }
     }
     
-    private func performAction(_ action: () throws -> Void) {
-        do {
-            try action()
-        } catch {
-            self.error = error
-            showError = true
+    private func performAction(_ action: @escaping () throws -> Void) {
+        Task {
+            do {
+                try action()
+            } catch {
+                self.error = error
+                showError = true
+            }
         }
     }
 }
 
 // MARK: - Playlist List
 struct PlaylistListView: View {
-    let playlists: [Playlist]
-    @Binding var selectedPlaylist: Playlist?
+    let playlists: [Wallpaper.Playlist]
+    @Binding var selectedPlaylist: Wallpaper.Playlist?
     @Binding var showingEditPlaylist: Bool
     @EnvironmentObject var themeManager: ThemeManager
     
@@ -192,7 +199,7 @@ struct QuickActionButton: View {
                 Spacer()
             }
             .padding(8)
-            .background(isHovered ? themeManager.theme.highlightColor : Color.clear)
+            .background(isHovered ? themeManager.theme.highlightColor.color : Color.clear)
             .cornerRadius(8)
         }
         .buttonStyle(PlainButtonStyle())
@@ -205,7 +212,7 @@ struct QuickActionButton: View {
 
 // MARK: - Playlist Menu Item
 struct PlaylistMenuItem: View {
-    @ObservedObject var playlist: PlaylistEntity
+    let playlist: Wallpaper.Playlist
     let onEdit: () -> Void
     @EnvironmentObject var themeManager: ThemeManager
     @State private var isHovered = false
@@ -222,22 +229,16 @@ struct PlaylistMenuItem: View {
             
             Spacer()
             
-            Button(action: {
-                playlist.isEnabled.toggle()
-            }) {
-                Image(systemName: playlist.isEnabled ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(themeManager.theme.accentColor)
-            }
-            .buttonStyle(PlainButtonStyle())
+            // Placeholder toggle or action could go here
             
             Button(action: onEdit) {
                 Image(systemName: "pencil")
-                    .foregroundColor(themeManager.theme.secondaryTextColor)
+                    .foregroundColor(themeManager.theme.secondaryTextColor.color)
             }
             .buttonStyle(PlainButtonStyle())
         }
         .padding(8)
-        .background(isHovered ? themeManager.theme.highlightColor : Color.clear)
+        .background(isHovered ? themeManager.theme.highlightColor.color : Color.clear)
         .cornerRadius(8)
         .onHover { hovering in
             isHovered = hovering
@@ -250,7 +251,7 @@ struct MenuBarView_Previews: PreviewProvider {
     static var previews: some View {
         MenuBarView()
             .environmentObject(WallpaperManager.shared)
-            .environmentObject(ThemeManager.shared)
+            .environmentObject(ThemeManager())
             .preferredColorScheme(.dark)
     }
-} 
+}

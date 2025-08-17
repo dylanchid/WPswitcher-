@@ -24,11 +24,15 @@ class KeyboardMonitor {
                 if event.modifierFlags.contains(.command) {
                     if event.modifierFlags.contains(.shift) {
                         let shortcut = KeyboardShortcut(action: .nextWallpaper, keyCode: 6, modifiers: [.command, .shift])
-                        self.delegate?.keyboardMonitor(self, didDetectShortcut: shortcut)
+                        Task { @MainActor in
+                            self.delegate?.keyboardMonitor(self, didDetectShortcut: shortcut)
+                        }
                         return nil
                     } else {
                         let shortcut = KeyboardShortcut(action: .previousWallpaper, keyCode: 6, modifiers: [.command])
-                        self.delegate?.keyboardMonitor(self, didDetectShortcut: shortcut)
+                        Task { @MainActor in
+                            self.delegate?.keyboardMonitor(self, didDetectShortcut: shortcut)
+                        }
                         return nil
                     }
                 }

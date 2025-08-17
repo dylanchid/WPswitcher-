@@ -4,7 +4,7 @@ import WallpaperTypes
 
 struct EditPlaylistView: View {
     @Environment(\.dismiss) private var dismiss
-    let wallpaperManager: WallpaperManager
+    @EnvironmentObject var rotationVM: RotationViewModel
     let playlist: Wallpaper.Playlist
     
     @State private var playlistName: String
@@ -14,8 +14,7 @@ struct EditPlaylistView: View {
     @State private var errorMessage: String?
     @State private var isErrorPresented = false
     
-    init(wallpaperManager: WallpaperManager, playlist: Wallpaper.Playlist) {
-        self.wallpaperManager = wallpaperManager
+    init(playlist: Wallpaper.Playlist) {
         self.playlist = playlist
         _playlistName = State(initialValue: playlist.name)
         _duration = State(initialValue: playlist.rotationInterval)
@@ -49,9 +48,9 @@ struct EditPlaylistView: View {
                     .font(.subheadline)
                 
                 Picker("", selection: $playbackMode) {
-                    Text("Sequential").tag(PlaybackMode.sequential)
-                    Text("Random").tag(PlaybackMode.random)
-                    Text("Shuffle").tag(PlaybackMode.shuffle)
+                    Text("Sequential").tag(Wallpaper.PlaybackMode.sequential)
+                    Text("Random").tag(Wallpaper.PlaybackMode.random)
+                    Text("Shuffle").tag(Wallpaper.PlaybackMode.shuffle)
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .frame(width: 250)
@@ -62,9 +61,7 @@ struct EditPlaylistView: View {
                     dismiss()
                 }
                 
-                Button("Save") {
-                    saveChanges()
-                }
+                Button("Save") { saveChanges() }
                 .buttonStyle(.borderedProminent)
             }
             .padding(.top, 10)
@@ -78,28 +75,22 @@ struct EditPlaylistView: View {
     }
     
     private func saveChanges() {
-        guard !playlistName.isEmpty else {
+        let trimmed = playlistName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
             showError = true
             errorMessage = "Please enter a playlist name"
             return
         }
-        
-        do {
-            try wallpaperManager.renamePlaylist(id: playlist.id, newName: playlistName)
-            dismiss()
-        } catch let error as WallpaperTypes.WallpaperError {
-            showError = true
-            switch error {
-            case .invalidPlaylistOperation(let message):
-                errorMessage = message
-            case .playlistNotFound(let id):
-                errorMessage = "Playlist with ID \(id) not found."
-            default:
-                errorMessage = error.localizedDescription
+
+        Task { @MainActor in
+            do {
+                try await rotationVM.renamePlaylist(id: playlist.id, to: trimmed)
+                dismiss()
+            } catch {
+                let alert = ErrorPresenter.alertContent(for: error)
+                errorMessage = [alert.message, alert.suggestion].compactMap { $0 }.joined(separator: "\n\n")
+                showError = true
             }
-        } catch {
-            showError = true
-            errorMessage = error.localizedDescription
         }
     }
 }
@@ -107,8 +98,8 @@ struct EditPlaylistView: View {
 // MARK: - Preview Provider
 struct EditPlaylistView_Previews: PreviewProvider {
     static var previews: some View {
-        let mockPlaylist = Playlist(id: UUID(), name: "Test Playlist", wallpapers: [], playbackMode: .sequential)
-        EditPlaylistView(wallpaperManager: WallpaperManager.shared, playlist: mockPlaylist)
+    let mockPlaylist = Wallpaper.Playlist(id: UUID(), name: "Test Playlist", wallpapers: [], playbackMode: .sequential, rotationInterval: 60)
+    EditPlaylistView(playlist: mockPlaylist)
             .frame(width: 400, height: 300)
             .preferredColorScheme(.dark)
     }

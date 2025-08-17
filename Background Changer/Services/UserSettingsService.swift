@@ -26,6 +26,8 @@ struct UserSettings: Codable {
     // Wallpaper Settings
     var defaultDisplayMode: DisplayMode
     var defaultRotationInterval: TimeInterval
+    var randomOrder: Bool
+    var changeOnWake: Bool
     var maxCacheSize: Int64
     var maxRecentWallpapers: Int
     
@@ -42,6 +44,8 @@ struct UserSettings: Codable {
          notificationsEnabled: Bool = true,
          defaultDisplayMode: DisplayMode = .fillScreen,
          defaultRotationInterval: TimeInterval = 3600,
+         randomOrder: Bool = false,
+         changeOnWake: Bool = true,
          maxCacheSize: Int64 = 1_073_741_824, // 1GB
          maxRecentWallpapers: Int = 50,
          favoriteWallpapers: Set<UUID> = [],
@@ -55,6 +59,8 @@ struct UserSettings: Codable {
         self.notificationsEnabled = notificationsEnabled
         self.defaultDisplayMode = defaultDisplayMode
         self.defaultRotationInterval = defaultRotationInterval
+        self.randomOrder = randomOrder
+        self.changeOnWake = changeOnWake
         self.maxCacheSize = maxCacheSize
         self.maxRecentWallpapers = maxRecentWallpapers
         self.favoriteWallpapers = favoriteWallpapers

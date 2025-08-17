@@ -7,22 +7,32 @@ enum ColorScheme: String, Codable {
 }
 
 // Codable wrapper for Color
-struct CodableColor: Codable {
+struct CodableColor: Codable, ShapeStyle {
     let red: Double
     let green: Double
     let blue: Double
     let alpha: Double
+    
+    func resolve(in environment: EnvironmentValues) -> Color {
+        self.color
+    }
     
     var color: Color {
         Color(.sRGB, red: red, green: green, blue: blue, opacity: alpha)
     }
     
     init(_ color: Color) {
-        // Default values, in a real implementation you'd extract components
-        self.red = 0.0
-        self.green = 0.0
-        self.blue = 0.0
-        self.alpha = 1.0
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        
+        NSColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
+        
+        self.red = Double(r)
+        self.green = Double(g)
+        self.blue = Double(b)
+        self.alpha = Double(a)
     }
 }
 
@@ -160,4 +170,4 @@ extension View {
     func themedBorder() -> some View {
         modifier(ThemedBorder())
     }
-} 
+}

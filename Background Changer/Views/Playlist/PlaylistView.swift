@@ -6,9 +6,10 @@ import Wallpaper
 struct PlaylistView: View {
     @StateObject private var viewModel: PlaylistViewModel
     
-    init(wallpaperManager: WallpaperManager, playlist: Playlist, onEdit: @escaping (Playlist) -> Void) {
+    @EnvironmentObject private var router: PlaylistFlowRouter
+
+    init(playlist: Wallpaper.Playlist, onEdit: @escaping (Wallpaper.Playlist) -> Void) {
         _viewModel = StateObject(wrappedValue: PlaylistViewModel(
-            wallpaperManager: wallpaperManager,
             playlist: playlist,
             onEdit: onEdit
         ))
@@ -38,18 +39,10 @@ struct PlaylistView: View {
         ) { result in
             viewModel.handleImagePickerResult(result)
         }
-        .alert("Delete Playlist", isPresented: $viewModel.showingDeleteAlert) {
-            Button("Delete", role: .destructive) {
-                viewModel.deletePlaylist()
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Are you sure you want to delete this playlist? This action cannot be undone.")
-        }
         .alert("Error", isPresented: $viewModel.isErrorPresented) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(viewModel.errorMessage ?? "An unknown error occurred")
+            Text(viewModel.presentedErrorMessage)
         }
     }
     
@@ -66,7 +59,7 @@ struct PlaylistView: View {
                     do {
                         try viewModel.wallpaperManager.undo()
                     } catch {
-                        viewModel.showError("Failed to undo: \(error.localizedDescription)")
+                        viewModel.presentError(error)
                     }
                 }) {
                     Image(systemName: "arrow.uturn.backward")
@@ -79,7 +72,7 @@ struct PlaylistView: View {
                     do {
                         try viewModel.wallpaperManager.redo()
                     } catch {
-                        viewModel.showError("Failed to redo: \(error.localizedDescription)")
+                        viewModel.presentError(error)
                     }
                 }) {
                     Image(systemName: "arrow.uturn.forward")
@@ -124,7 +117,7 @@ struct PlaylistView: View {
                     Image(systemName: "pencil")
                 }
                 
-                Button(action: { viewModel.showingDeleteAlert = true }) {
+                Button(action: { (router.coordinator as? PlaylistCoordinator)?.confirmDelete(playlist: viewModel.playlist) }) {
                     Image(systemName: "trash")
                 }
             }
@@ -141,15 +134,14 @@ struct PlaylistView: View {
     private var wallpaperGridView: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 8) {
             ForEach(Array(viewModel.playlist.wallpapers.enumerated()), id: \.element.id) { index, wallpaper in
-                if let url = wallpaper.fileURL,
-                   let image = NSImage(contentsOf: url) {
+                if let image = NSImage(contentsOf: wallpaper.url) {
                     PlaylistThumbnailView(
                         image: image,
                         wallpaper: wallpaper,
                         index: index,
                         isDragged: viewModel.draggedItemId == wallpaper.id,
                         isDropTarget: viewModel.dropTargetIndex == index,
-                        onTap: { viewModel.setWallpaper(from: url) },
+                        onTap: { viewModel.setWallpaper(from: wallpaper.url) },
                         onDragStart: { viewModel.draggedItemId = wallpaper.id },
                         onDragEnd: { viewModel.draggedItemId = nil }
                     )
@@ -176,4 +168,4 @@ struct PlaylistView: View {
             viewModel.dropTargetIndex = isTargeted ? viewModel.playlist.wallpapers.count : nil
         }
     }
-} 
+}

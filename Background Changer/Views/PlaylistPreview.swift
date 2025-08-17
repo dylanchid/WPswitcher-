@@ -1,5 +1,5 @@
-import AppKit
 import SwiftUI
+import Wallpaper
 
 // View component
 struct PlaylistPreview: View {

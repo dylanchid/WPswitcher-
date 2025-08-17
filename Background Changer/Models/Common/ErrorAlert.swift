@@ -1,4 +1,5 @@
 import Foundation
+import WallpaperTypes
 
 struct ErrorAlert: Identifiable {
     let id = UUID()
@@ -38,4 +39,4 @@ enum ErrorSeverity: String, Codable {
         case .critical: return "purple"
         }
     }
-} 
+}

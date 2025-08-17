@@ -12,6 +12,7 @@ enum StatusItemAction {
     case quit
 }
 
+@MainActor
 class StatusItemManager {
     // MARK: - Properties
     private var statusItem: NSStatusItem?

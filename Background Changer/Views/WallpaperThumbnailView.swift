@@ -8,6 +8,7 @@ struct WallpaperThumbnailView: View {
     @StateObject var wallpaperManager: WallpaperManager = WallpaperManager.shared
     @State private var isLoading: Bool = false
     @State private var showError: Bool = false
+    @State private var lastError: Error?
     @State private var thumbnailImage: NSImage?
     
     var body: some View {
@@ -29,7 +30,8 @@ struct WallpaperThumbnailView: View {
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text("Unknown error")
+            let alert = lastError.map { ErrorPresenter.alertContent(for: $0) }
+            Text([alert?.message, alert?.suggestion].compactMap { $0 }.joined(separator: "\n\n"))
         }
         .task {
             await loadThumbnail()
@@ -78,6 +80,7 @@ struct WallpaperThumbnailView: View {
                 thumbnailImage = image
             }
         } catch {
+            lastError = error
             showError = true
         }
     }

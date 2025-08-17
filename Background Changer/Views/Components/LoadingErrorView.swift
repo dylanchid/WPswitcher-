@@ -36,7 +36,8 @@ struct LoadingErrorView: View {
             Text("Error")
                 .font(.headline)
             
-            Text(error.localizedDescription)
+            let alert = ErrorPresenter.alertContent(for: error)
+            Text([alert.message, alert.suggestion].compactMap { $0 }.joined(separator: "\n\n"))
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

@@ -4,7 +4,7 @@ import WallpaperTypes
 
 struct CreatePlaylistView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var wallpaperManager: WallpaperManager
+    @EnvironmentObject var rotationVM: RotationViewModel
     
     @State private var playlistName: String = ""
     @State private var duration: Double = 60
@@ -39,9 +39,9 @@ struct CreatePlaylistView: View {
                     .font(.subheadline)
                 
                 Picker("", selection: $playbackMode) {
-                    Text("Sequential").tag(PlaybackMode.sequential)
-                    Text("Random").tag(PlaybackMode.random)
-                    Text("Shuffle").tag(PlaybackMode.shuffle)
+                    Text("Sequential").tag(Wallpaper.PlaybackMode.sequential)
+                    Text("Random").tag(Wallpaper.PlaybackMode.random)
+                    Text("Shuffle").tag(Wallpaper.PlaybackMode.shuffle)
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .frame(width: 250)
@@ -52,9 +52,7 @@ struct CreatePlaylistView: View {
                     dismiss()
                 }
                 
-                Button("Create") {
-                    createPlaylist()
-                }
+                Button("Create") { createPlaylist() }
                 .buttonStyle(.borderedProminent)
             }
             .padding(.top, 10)
@@ -68,28 +66,15 @@ struct CreatePlaylistView: View {
     }
     
     private func createPlaylist() {
-        guard !playlistName.isEmpty else {
-            showError = true
-            errorMessage = "Please enter a playlist name"
-            return
-        }
-        
-        do {
-            try wallpaperManager.createPlaylist(name: playlistName)
-            dismiss()
-        } catch let error as WallpaperTypes.WallpaperError {
-            showError = true
-            switch error {
-            case .invalidPlaylistOperation(let message):
-                errorMessage = message
-            case .playlistLimitExceeded:
-                errorMessage = "You have reached the maximum number of playlists."
-            default:
-                errorMessage = error.localizedDescription
+        Task {
+            do {
+                try await rotationVM.createPlaylist(name: playlistName)
+                dismiss()
+            } catch {
+                let alert = ErrorPresenter.alertContent(for: error)
+                errorMessage = [alert.message, alert.suggestion].compactMap { $0 }.joined(separator: "\n\n")
+                showError = true
             }
-        } catch {
-            showError = true
-            errorMessage = error.localizedDescription
         }
     }
 }
@@ -97,7 +82,7 @@ struct CreatePlaylistView: View {
 // MARK: - Preview Provider
 struct CreatePlaylistView_Previews: PreviewProvider {
     static var previews: some View {
-        CreatePlaylistView(wallpaperManager: WallpaperManager.shared)
+        CreatePlaylistView()
             .frame(width: 400, height: 300)
             .preferredColorScheme(.dark)
     }

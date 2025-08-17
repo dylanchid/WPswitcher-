@@ -114,7 +114,8 @@ struct BackupSettingsView: View {
             }
         } message: {
             if let error = backupError {
-                Text(error.localizedDescription)
+                let alert = ErrorPresenter.alertContent(for: error)
+                Text([alert.message, alert.suggestion].compactMap { $0 }.joined(separator: "\n\n"))
             }
         }
     }

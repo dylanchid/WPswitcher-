@@ -49,8 +49,8 @@ public final class UnifiedPlaylistService: PlaylistServiceProtocol {
             throw WallpaperError.playlistNotFound
         }
         
-        var updatedPlaylist = playlist
-        // updatedPlaylist.name = newName
+    var updatedPlaylist = playlist
+    updatedPlaylist.name = newName
         playlists[index] = updatedPlaylist
         try savePlaylists()
     }
@@ -60,8 +60,8 @@ public final class UnifiedPlaylistService: PlaylistServiceProtocol {
             throw WallpaperError.playlistNotFound
         }
         
-        var updatedPlaylist = playlist
-        // updatedPlaylist.wallpapers.append(wallpaper)
+    var updatedPlaylist = playlist
+    updatedPlaylist.wallpapers.append(wallpaper)
         playlists[index] = updatedPlaylist
         try savePlaylists()
     }
@@ -71,8 +71,8 @@ public final class UnifiedPlaylistService: PlaylistServiceProtocol {
             throw WallpaperError.playlistNotFound
         }
         
-        var updatedPlaylist = playlist
-        // updatedPlaylist.wallpapers.removeAll { $0.id == wallpaper.id }
+    var updatedPlaylist = playlist
+    updatedPlaylist.wallpapers.removeAll { $0.id == wallpaper.id }
         playlists[index] = updatedPlaylist
         try savePlaylists()
     }
@@ -90,7 +90,7 @@ public final class UnifiedPlaylistService: PlaylistServiceProtocol {
         guard let playlist = playlists.first(where: { $0.id == playlist.id }) else {
             throw WallpaperError.playlistNotFound
         }
-        return []
+    return playlist.wallpapers
     }
     
     public func reorderWallpapers(in playlist: Playlist, newOrder: [WallpaperItem]) async throws {
@@ -98,8 +98,8 @@ public final class UnifiedPlaylistService: PlaylistServiceProtocol {
             throw WallpaperError.playlistNotFound
         }
         
-        var updatedPlaylist = playlist
-        // updatedPlaylist.wallpapers = newOrder
+    var updatedPlaylist = playlist
+    updatedPlaylist.wallpapers = newOrder
         playlists[index] = updatedPlaylist
         try savePlaylists()
     }

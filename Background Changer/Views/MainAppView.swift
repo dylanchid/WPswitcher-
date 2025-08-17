@@ -11,6 +11,7 @@ import WallpaperTypes
 struct MainAppView: View {
     @EnvironmentObject var wallpaperManager: WallpaperManager
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var rotationVM: RotationViewModel
     @State private var selectedTab = 0
     @AppStorage("lastSelectedTab") private var lastSelectedTab = 0
     
@@ -26,7 +27,7 @@ struct MainAppView: View {
                     }
                     .tag(0)
                 
-                PlaylistsView(wallpaperManager: WallpaperManager.shared)
+                PlaylistsView()
                     .tabItem {
                         Label("Playlists", systemImage: "list.bullet")
                     }
@@ -39,11 +40,10 @@ struct MainAppView: View {
                     .tag(2)
             }
         }
-        .themedBackground()
-        .environment(\.colorScheme, themeManager.theme.colorScheme == .dark ? .dark : .light)
-        .onChange(of: selectedTab) { newValue in
-            lastSelectedTab = newValue
-        }
+    .themedBackground()
+    .environment(\.colorScheme, themeManager.theme.colorScheme == .dark ? .dark : .light)
+    .vmErrorAlert($rotationVM.lastError)
+    .onChange(of: selectedTab) { lastSelectedTab = $0 }
         .onAppear {
             selectedTab = lastSelectedTab
         }
@@ -64,7 +64,7 @@ struct SidebarView: View {
                 }
                 .tag(0)
                 
-                NavigationLink(destination: PlaylistView()) {
+                NavigationLink(destination: PlaylistsView()) {
                     Label("Playlists", systemImage: "list.bullet")
                         .themedText()
                 }
@@ -72,7 +72,7 @@ struct SidebarView: View {
             }
             
             Section(header: Text("Playlists").themedText()) {
-                NavigationLink(destination: PlaylistsView(wallpaperManager: wallpaperManager)) {
+                NavigationLink(destination: PlaylistsView()) {
                     Label("Manage Playlists", systemImage: "list.bullet")
                         .themedText()
                 }
@@ -128,7 +128,8 @@ struct WallpaperGridView: View {
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(error?.localizedDescription ?? "Unknown error")
+            let alert = error.map { ErrorPresenter.alertContent(for: $0) }
+            Text([alert?.message, alert?.suggestion].compactMap { $0 }.joined(separator: "\n\n"))
         }
         .task {
             await loadWallpapers()
@@ -155,7 +156,7 @@ struct SearchBar: View {
     var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(themeManager.theme.secondaryTextColor)
+                .foregroundColor(themeManager.theme.secondaryTextColorValue)
             
             TextField("Search", text: $text)
                 .textFieldStyle(PlainTextFieldStyle())
@@ -167,13 +168,13 @@ struct SearchBar: View {
                     text = ""
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(themeManager.theme.secondaryTextColor)
+                        .foregroundColor(themeManager.theme.secondaryTextColorValue)
                 }
                 .buttonStyle(PlainButtonStyle())
             }
         }
         .padding(8)
-        .background(themeManager.theme.backgroundColor)
+    .background(themeManager.theme.backgroundColorValue)
         .cornerRadius(8)
         .themedBorder()
     }

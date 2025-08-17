@@ -1,8 +1,9 @@
 import SwiftUI
 import WallpaperTypes
+import Wallpaper
 
 struct SettingsView: View {
-    @EnvironmentObject var wallpaperManager: WallpaperManager
+    @EnvironmentObject var rotationVM: RotationViewModel
     @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedTab = 0
     
@@ -38,18 +39,18 @@ struct SettingsView: View {
 }
 
 struct GeneralSettingsView: View {
-    @EnvironmentObject var wallpaperManager: WallpaperManager
+    @EnvironmentObject var rotationVM: RotationViewModel
     
     var body: some View {
         Form {
             Section(header: Text("General Settings")) {
-                Toggle("Start at Login", isOn: $wallpaperManager.userProfile.preferences.startAtLogin)
-                Toggle("Show in Dock", isOn: $wallpaperManager.userProfile.preferences.showInDock)
-                Toggle("Show in Menu Bar", isOn: $wallpaperManager.userProfile.preferences.showInMenuBar)
+                Toggle("Start at Login", isOn: $rotationVM.startAtLogin)
+                Toggle("Show in Dock", isOn: rotationVM.binding(\.showInDock))
+                Toggle("Show in Menu Bar", isOn: rotationVM.binding(\.showInMenuBar))
             }
             
             Section(header: Text("Wallpaper Settings")) {
-                Picker("Display Mode", selection: $wallpaperManager.userProfile.preferences.displayMode) {
+                Picker("Display Mode", selection: rotationVM.binding(\.defaultDisplayMode)) {
                     Text("Fill").tag(DisplayMode.fillScreen)
                     Text("Fit").tag(DisplayMode.fit)
                     Text("Stretch").tag(DisplayMode.stretch)
@@ -57,8 +58,8 @@ struct GeneralSettingsView: View {
                     Text("Tile").tag(DisplayMode.tile)
                 }
                 
-                Toggle("Random Order", isOn: $wallpaperManager.userProfile.preferences.randomOrder)
-                Toggle("Change on Wake", isOn: $wallpaperManager.userProfile.preferences.changeOnWake)
+                Toggle("Random Order", isOn: rotationVM.binding(\.randomOrder))
+                Toggle("Change on Wake", isOn: rotationVM.binding(\.changeOnWake))
             }
         }
         .padding()
@@ -114,27 +115,24 @@ struct AppearanceSettingsView: View {
 }
 
 struct PlaylistSettingsView: View {
-    @EnvironmentObject var playlistService: PlaylistService
-    
+    @EnvironmentObject var rotationVM: RotationViewModel
+
     var body: some View {
         Form {
             Section(header: Text("Playlist Management")) {
                 List {
-                    ForEach(playlistService.playlists) { playlist in
+                    ForEach(rotationVM.playlists) { playlist in
                         PlaylistRow(playlist: playlist)
                     }
-                    .onMove { indices, newOffset in
-                        // playlistService.movePlaylist(from: indices, to: newOffset)
-                    }
                 }
-                
+
                 Button(action: {
-                    // playlistService.createPlaylist(name: "New Playlist")
+                    // Handled via CreatePlaylistView elsewhere
                 }) {
                     Label("New Playlist", systemImage: "plus")
                 }
             }
-            
+
             Section(header: Text("Playlist Settings")) {
                 Toggle("Show Playlist Names", isOn: .constant(true))
                 Toggle("Show Wallpaper Count", isOn: .constant(true))

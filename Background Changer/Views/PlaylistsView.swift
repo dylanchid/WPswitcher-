@@ -2,30 +2,35 @@ import SwiftUI
 import AppKit
 
 struct PlaylistsView: View {
-    @ObservedObject var wallpaperManager: WallpaperManager
-    @State private var showingCreatePlaylist = false
-    @State private var editingPlaylist: Playlist?
+    @EnvironmentObject var rotationVM: RotationViewModel
+    @EnvironmentObject var router: PlaylistFlowRouter
+    @EnvironmentObject var wallpaperManager: WallpaperManager
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                ForEach(wallpaperManager.playlists) { playlist in
-                    PlaylistViewModule.View(
-                        wallpaperManager: wallpaperManager,
-                        playlist: playlist,
-                        onEdit: { playlist in
-                            editingPlaylist = playlist
-                        }
-                    )
+        VStack(spacing: 8) {
+            HStack {
+                Text("Playlists").font(.title2).bold()
+                Spacer()
+                Button {
+                    router.startCreate()
+                } label: {
+                    Label("New Playlist", systemImage: "plus")
                 }
             }
-            .padding()
-        }
-        .sheet(isPresented: $showingCreatePlaylist) {
-            CreatePlaylistView(wallpaperManager: wallpaperManager)
-        }
-        .sheet(item: $editingPlaylist) { playlist in
-            EditPlaylistView(wallpaperManager: wallpaperManager, playlist: playlist)
+            .padding(.horizontal)
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    ForEach(rotationVM.playlists) { playlist in
+                        PlaylistViewModule.View(
+                            wallpaperManager: wallpaperManager,
+                            playlist: playlist,
+                            onEdit: { p in router.startRename(p) }
+                        )
+                    }
+                }
+                .padding()
+            }
         }
     }
 }
@@ -33,6 +38,6 @@ struct PlaylistsView: View {
 // MARK: - Preview Provider
 struct PlaylistsView_Previews: PreviewProvider {
     static var previews: some View {
-        PlaylistsView(wallpaperManager: WallpaperManager.shared)
+        PlaylistsView()
     }
 } 

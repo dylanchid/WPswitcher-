@@ -31,12 +31,16 @@ public class WallpaperManager: ObservableObject {
     // MARK: - Dependencies
     private let wallpaperService: WallpaperTypes.WallpaperServiceProtocol
     private let persistenceController: PersistenceController
+    private let playlistService: Wallpaper.PlaylistServiceProtocol
 
     // MARK: - Published Properties
     @Published private(set) var currentWallpaperPath: String
     @Published private(set) var globalWallpapers: [URL]
     @Published private(set) var playlists: [PlaylistEntity]
+    // Unified playlists used by UI (Wallpaper module types)
+    @Published private(set) var userPlaylists: [Wallpaper.Playlist] = []
     @Published var displayMode: WallpaperTypes.DisplayMode
+    @Published var showOnAllSpaces: Bool
     @Published var isRotating: Bool
     @Published var rotationInterval: RotationInterval
     @Published var customInterval: TimeInterval
@@ -45,10 +49,10 @@ public class WallpaperManager: ObservableObject {
     @Published var userProfile: UserProfile
     @Published var currentVersionIndex: Int = -1
     @Published var versionHistory: [PlaylistVersion] = []
-    @Published var wallpapers: [WallpaperItem] = []
+    @Published var wallpapers: [WallpaperTypes.WallpaperItem] = []
     
     // Convenience for views expecting this name
-    var allWallpapers: [WallpaperItem] { wallpapers }
+    var allWallpapers: [WallpaperTypes.WallpaperItem] { wallpapers }
 
     // MARK: - Private Properties
     private var timer: Timer?
@@ -73,12 +77,14 @@ public class WallpaperManager: ObservableObject {
     init(wallpaperService: WallpaperTypes.WallpaperServiceProtocol, persistenceController: PersistenceController) {
         self.wallpaperService = wallpaperService
         self.persistenceController = persistenceController
+        self.playlistService = PlaylistService()
 
         // Initialize with saved values
         self.currentWallpaperPath = ""
         self.globalWallpapers = []
         self.playlists = []
-        self.displayMode = wallpaperService.displayMode
+    self.displayMode = wallpaperService.displayMode
+    self.showOnAllSpaces = wallpaperService.showOnAllSpaces
         self.rotationInterval = .thirtyMinutes
         self.customInterval = 0
         self.isRotating = false
@@ -86,6 +92,9 @@ public class WallpaperManager: ObservableObject {
         self.userProfile = UserProfile() // Initialize userProfile
 
         loadPlaylists()
+        Task { @MainActor in
+            await refreshUserPlaylists()
+        }
         setupAppearanceObserver()
     }
 
@@ -119,6 +128,13 @@ public class WallpaperManager: ObservableObject {
                 await setWallpaper(from: currentWallpaper)
             }
         }
+    }
+
+    /// Updates whether to show wallpaper on all spaces
+    public func updateShowOnAllSpaces(_ show: Bool) {
+        showOnAllSpaces = show
+        UserDefaults.standard.set(show, forKey: "showOnAllSpaces")
+        wallpaperService.showOnAllSpaces = show
     }
 
     /// Starts wallpaper rotation
@@ -188,6 +204,16 @@ public class WallpaperManager: ObservableObject {
         try rotateToNext()
     }
 
+    public func previousWallpaper() throws {
+        try rotateToPrevious()
+    }
+
+    public func randomWallpaper() throws {
+        Task {
+            await rotateToNextWallpaper(random: true)
+        }
+    }
+
     public func getCurrentSystemWallpaper() -> (URL, NSScreen)? {
         return nil
     }
@@ -229,148 +255,71 @@ public class WallpaperManager: ObservableObject {
         }
     }
 
-    /// Creates a new playlist
-    public func createPlaylist(name: String, appearanceMode: PlaylistAppearanceMode = .system) {
-        let context = persistenceController.container.viewContext
-        let playlist = PlaylistEntity(context: context)
-        playlist.id = UUID()
-        playlist.name = name
-        playlist.appearanceMode = appearanceMode
-        playlist.playbackMode = .sequential // Default playback mode
-        saveContext()
-        loadPlaylists()
+    /// Creates a new playlist (Unified service)
+    public func createPlaylist(name: String) async throws {
+        _ = try await playlistService.createPlaylist(name: name)
+        await refreshUserPlaylists()
     }
 
-    /// Deletes a playlist
-    public func deletePlaylist(id: UUID) {
-        let context = persistenceController.container.viewContext
-        let request = PlaylistEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-        
+    /// Deletes a playlist (Unified service)
+    public func deletePlaylist(id: UUID) async {
+        guard let p = userPlaylists.first(where: { $0.id == id }) else { return }
         do {
-            let playlists = try context.fetch(request)
-            for playlist in playlists {
-                context.delete(playlist)
-            }
-            saveContext()
-            loadPlaylists()
+            try await playlistService.deletePlaylist(p)
+            await refreshUserPlaylists()
         } catch {
-            // Handle error
+            // Propagate via currentError for now
+            currentError = .playlistError(error.localizedDescription)
         }
     }
 
-    /// Adds wallpapers to a playlist
+    /// Renames a playlist (Unified service)
+    public func renamePlaylist(id: UUID, newName: String) async throws {
+        guard let p = userPlaylists.first(where: { $0.id == id }) else {
+            throw WallpaperTypes.WallpaperError.playlistNotFound
+        }
+        try await playlistService.renamePlaylist(p, to: newName)
+        await refreshUserPlaylists()
+    }
+
+    /// Adds wallpapers to a playlist (Unified service)
     public func addWallpaperToPlaylist(playlistId: UUID, urls: [URL]) async {
-        let context = persistenceController.container.viewContext
-        let request = PlaylistEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", playlistId as CVarArg)
-        
+        guard let p = userPlaylists.first(where: { $0.id == playlistId }) else { return }
         do {
-            if let playlist = try context.fetch(request).first {
-                let urls = urls // Use the actual URLs parameter
-                playlist.wallpapers.append(contentsOf: urls)
-                saveContext()
-                loadPlaylists()
+            for url in urls {
+                let item = WallpaperTypes.WallpaperItem(id: UUID(), url: url, name: url.lastPathComponent)
+                try await playlistService.addWallpaper(item, to: p)
             }
+            await refreshUserPlaylists()
         } catch {
-            // Handle error
+            currentError = .playlistError(error.localizedDescription)
         }
     }
 
-    /// Removes wallpapers from a playlist
-    public func removeWallpapers(_ urls: [URL], from playlistId: UUID) {
-        let context = persistenceController.container.viewContext
-        let request = PlaylistEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", playlistId as CVarArg)
+    /// Removes wallpapers from a playlist (Unified service)
+    public func removeWallpapers(_ urls: [URL], from playlistId: UUID) async {
+        guard let p = userPlaylists.first(where: { $0.id == playlistId }) else { return }
         do {
-            if let playlist = try context.fetch(request).first {
-                playlist.wallpapers.removeAll { urls.contains($0) }
-                saveContext()
-                loadPlaylists()
+            let playlistWallpapers = try await playlistService.getWallpapers(for: p)
+            let itemsToRemove = playlistWallpapers.filter { urls.contains($0.url) }
+            for item in itemsToRemove {
+                try await playlistService.removeWallpaper(item, from: p)
             }
+            await refreshUserPlaylists()
         } catch {
-            // Handle error
+            currentError = .playlistError(error.localizedDescription)
         }
     }
 
-    /// Reorders wallpapers in a playlist
-    public func reorderWallpapersInPlaylist(playlistId: UUID, sourceIndex: Int, destinationIndex: Int) {
-        let context = persistenceController.container.viewContext
-        let request = PlaylistEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", playlistId as CVarArg)
-        
-        do {
-            if let playlist = try context.fetch(request).first {
-                let wallpaper = playlist.wallpapers.remove(at: sourceIndex)
-                playlist.wallpapers.insert(wallpaper, at: destinationIndex)
-                saveContext()
-                loadPlaylists()
-            }
-        } catch {
-            // Handle error
-        }
-    }
-    
-    /// Adds wallpapers to a playlist
-    func addWallpapersToPlaylist(_ wallpapers: [WallpaperItem], playlistId: UUID) throws {
-        let context = persistenceController.container.viewContext
-        let request = PlaylistEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", playlistId as CVarArg)
-        
-        do {
-            if let playlist = try context.fetch(request).first {
-                let urls = wallpapers.map { $0.url }
-                playlist.wallpapers.append(contentsOf: urls)
-                saveContext()
-                loadPlaylists()
-            }
-        } catch {
-            throw WallpaperTypes.WallpaperError.playlistError("Failed to add wallpapers to playlist")
-        }
-    }
-    
-    /// Reorders wallpapers in a playlist by indices
-    public func reorderWallpapers(in playlistId: UUID, from sourceIndex: Int, to destinationIndex: Int) throws {
-        reorderWallpapersInPlaylist(playlistId: playlistId, sourceIndex: sourceIndex, destinationIndex: destinationIndex)
-    }
-    
-    /// Updates playlist playback mode
-    public func updatePlaylistPlaybackMode(playlistId: UUID, mode: Wallpaper.PlaybackMode) {
-        // Update the playback mode for the specific playlist
-        playbackMode = mode
-        // In a full implementation, this would be stored per-playlist
-        UserDefaults.standard.set(mode.rawValue, forKey: "playlistPlaybackMode_\(playlistId)")
+    public func restoreFromBackup(id: UUID) throws {
+        try persistenceController.restoreBackup(for: id)
     }
 
-    /// Sets the active playlist (nil for global wallpapers)
-    public func setActivePlaylist(_ playlistId: UUID?) {
-        activePlaylistId = playlistId
-    }
-
-    /// Starts playlist rotation
-    public func startPlaylistRotation(playlistId: UUID?, interval: RotationInterval = .thirtyMinutes, customInterval: TimeInterval? = nil) {
-        setActivePlaylist(playlistId)
-        startRotation(interval: interval, customInterval: customInterval)
-    }
-
-    private func downloadImage(from url: URL) async throws -> URL {
-        let (data, response) = try await URLSession.shared.data(from: url)
-
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw WallpaperError.networkError("Invalid response from server")
-        }
-
-        let temporaryDirectory = FileManager.default.temporaryDirectory
-        let fileName = UUID().uuidString
-        let fileURL = temporaryDirectory.appendingPathComponent(fileName)
-
-        try data.write(to: fileURL)
-
-        return fileURL
+    public func deleteBackup(id: UUID) throws {
+        try persistenceController.deleteBackup(for: id)
     }
 
     // MARK: - Private Methods
-
     private func loadPlaylists() {
         let context = persistenceController.container.viewContext
         let request = PlaylistEntity.fetchRequest()
@@ -378,6 +327,16 @@ public class WallpaperManager: ObservableObject {
             playlists = try context.fetch(request)
         } catch {
             // Handle error
+        }
+    }
+
+    @MainActor
+    private func refreshUserPlaylists() async {
+        do {
+            let list = try await playlistService.getPlaylists()
+            self.userPlaylists = list
+        } catch {
+            // Ignore for now; callers will surface errors when performing actions
         }
     }
 
@@ -399,19 +358,19 @@ public class WallpaperManager: ObservableObject {
 
     
 
-    private func rotateToNextWallpaper() async {
+    private func rotateToNextWallpaper(random: Bool = false) async {
         var wallpapersToRotate: [URL] = []
         var currentWallpaperIndex: Int = -1
 
-        if isUsingGlobalWallpapers {
+      if isUsingGlobalWallpapers {
             wallpapersToRotate = globalWallpapers
             currentWallpaperIndex = globalWallpapers.firstIndex(of: URL(fileURLWithPath: currentWallpaperPath)) ?? -1
         } else {
-            guard let activePlaylistId = activePlaylistId,
-                  let playlist = playlists.first(where: { $0.id == activePlaylistId }),
-                  !playlist.wallpapers.isEmpty else { return }
-            wallpapersToRotate = playlist.wallpapers
-            currentWallpaperIndex = wallpapersToRotate.firstIndex(of: URL(fileURLWithPath: currentWallpaperPath)) ?? -1
+        guard let activePlaylistId = activePlaylistId,
+            let playlist = userPlaylists.first(where: { $0.id == activePlaylistId }),
+            !playlist.wallpapers.isEmpty else { return }
+        wallpapersToRotate = playlist.wallpapers.map { $0.url }
+        currentWallpaperIndex = wallpapersToRotate.firstIndex(of: URL(fileURLWithPath: currentWallpaperPath)) ?? -1
         }
 
         guard !wallpapersToRotate.isEmpty else { return }
@@ -442,11 +401,12 @@ public class WallpaperManager: ObservableObject {
             guard let self = self else { return }
             
             Task { @MainActor in
-                guard let activePlaylistId = self.activePlaylistId,
-                      let playlist = self.playlists.first(where: { $0.id == activePlaylistId }) else { return }
+            guard let activePlaylistId = self.activePlaylistId,
+                let playlist = self.userPlaylists.first(where: { $0.id == activePlaylistId }) else { return }
 
                 // Check if playlist should change based on appearance
-                if playlist.appearanceMode == .system {
+                // If following system appearance, rotate to next
+                if true {
                     await self.rotateToNextWallpaper()
                 }
             }
@@ -489,4 +449,4 @@ private class MockWallpaperRotationService: Wallpaper.WallpaperRotationServicePr
     func stop() {}
     func setRotationInterval(_ interval: TimeInterval) async {}
     func getNextWallpaper() async throws -> WallpaperTypes.WallpaperItem? { nil }
-} 
+}

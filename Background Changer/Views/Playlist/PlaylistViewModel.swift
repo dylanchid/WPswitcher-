@@ -6,16 +6,25 @@ import WallpaperTypes
 @MainActor
 class PlaylistViewModel: ObservableObject {
     @Published var isExpanded: Bool = true
-    @Published var showingDeleteAlert = false
     @Published var draggedItemId: UUID?
     @Published var dropTargetIndex: Int?
     @Published var showingImagePicker = false
     @Published var errorMessage: String?
     @Published var isErrorPresented = false
+    private var lastError: Error?
+
+    var presentedErrorMessage: String {
+        if let lastError = lastError {
+            let alert = ErrorPresenter.alertContent(for: lastError)
+            return [alert.message, alert.suggestion].compactMap { $0 }.joined(separator: "\n\n")
+        }
+        return errorMessage ?? "An unknown error occurred"
+    }
     
     let wallpaperManager: WallpaperManager
     let playlist: Playlist
-    let onEdit: (Playlist) -> Void
+    let onEdit: (Wallpaper.Playlist) -> Void
+    var onDelete: ((Wallpaper.Playlist) -> Void)?
     
     // Version history properties
     var canUndo: Bool {
@@ -30,8 +39,8 @@ class PlaylistViewModel: ObservableObject {
         wallpaperManager.versionHistory
     }
     
-    init(wallpaperManager: WallpaperManager, playlist: Playlist, onEdit: @escaping (Playlist) -> Void) {
-        self.wallpaperManager = wallpaperManager
+    init(playlist: Wallpaper.Playlist, onEdit: @escaping (Wallpaper.Playlist) -> Void) {
+        self.wallpaperManager = .shared
         self.playlist = playlist
         self.onEdit = onEdit
     }
@@ -39,35 +48,19 @@ class PlaylistViewModel: ObservableObject {
     func handleImagePickerResult(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
-            for url in urls {
-                if url.startAccessingSecurityScopedResource() {
-                    let wallpaper = WallpaperItem(
-                        id: UUID(),
-                        url: url,
-                        name: url.lastPathComponent
-                    )
-                    do {
-                        try wallpaperManager.addWallpapersToPlaylist([wallpaper], playlistId: playlist.id)
-                    } catch {
-                        showError("Failed to add wallpaper: \(error.localizedDescription)")
-                    }
-                    url.stopAccessingSecurityScopedResource()
-                }
+            Task {
+                await wallpaperManager.addWallpaperToPlaylist(playlistId: playlist.id, urls: urls)
             }
         case .failure(let error):
-            showError("Error selecting images: \(error.localizedDescription)")
+            present(error)
         }
     }
     
-    func deletePlaylist() {
-        wallpaperManager.deletePlaylist(id: playlist.id)
-    }
+    // Delete is handled by the coordinator; trigger from the View via router
     
     func moveWallpaper(from sourceIndex: Int, to destinationIndex: Int) {
-        do {
-            try wallpaperManager.reorderWallpapers(in: playlist.id, from: sourceIndex, to: destinationIndex)
-        } catch {
-            showError("Failed to move wallpaper: \(error.localizedDescription)")
+        Task { @MainActor in
+            await wallpaperManager.reorderWallpapers(in: playlist.id, from: sourceIndex, to: destinationIndex)
         }
     }
     
@@ -78,22 +71,16 @@ class PlaylistViewModel: ObservableObject {
         }
     }
     
-    func updatePlaybackMode(_ mode: PlaybackMode) {
-        // Convert local PlaybackMode to Wallpaper.PlaybackMode
-        let wallpaperMode: Wallpaper.PlaybackMode
-        switch mode {
-        case .sequential:
-            wallpaperMode = .sequential
-        case .random:
-            wallpaperMode = .random
-        case .shuffle:
-            wallpaperMode = .shuffle
-        }
-        wallpaperManager.updatePlaylistPlaybackMode(playlistId: playlist.id, mode: wallpaperMode)
+    func updatePlaybackMode(_ mode: Wallpaper.PlaybackMode) {
+        wallpaperManager.updatePlaylistPlaybackMode(playlistId: playlist.id, mode: mode)
     }
     
-    func showError(_ message: String) {
-        errorMessage = message
+    func presentError(_ error: Error) {
+        present(error)
+    }
+
+    private func present(_ error: Error) {
+        lastError = error
         isErrorPresented = true
     }
-} 
+}

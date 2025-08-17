@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import WallpaperTypes
 
 struct HomeView: View {
     @ObservedObject var wallpaperManager: WallpaperManager
@@ -10,7 +11,7 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                CurrentWallpaperSection(wallpaperManager: wallpaperManager)
+                CurrentWallpaperSection(wallpaperManager: wallpaperManager, selectWallpaper: selectWallpaper)
                 WallpaperGridSection(wallpaperManager: wallpaperManager)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -26,7 +27,8 @@ struct HomeView: View {
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(error?.localizedDescription ?? "Unknown error")
+            let alert = error.map { ErrorPresenter.alertContent(for: $0) }
+            Text([alert?.message, alert?.suggestion].compactMap { $0 }.joined(separator: "\n\n"))
         }
     }
     
@@ -44,7 +46,7 @@ struct HomeView: View {
                 Task {
                     do {
                         try await wallpaperManager.addWallpapers([url])
-                        try wallpaperManager.setWallpaper(from: url)
+                        await wallpaperManager.setWallpaper(from: url)
                     } catch {
                         self.error = error
                         showError = true
@@ -61,6 +63,7 @@ struct HomeView: View {
 // MARK: - Current Wallpaper Section
 struct CurrentWallpaperSection: View {
     @ObservedObject var wallpaperManager: WallpaperManager
+    let selectWallpaper: () -> Void
     
     var body: some View {
         if let (currentURL, currentScreen) = wallpaperManager.getCurrentSystemWallpaper() {
@@ -72,7 +75,7 @@ struct CurrentWallpaperSection: View {
             .background(Color(.windowBackgroundColor).opacity(0.5))
             .cornerRadius(10)
         } else {
-            NoWallpaperView(selectWallpaper: { wallpaperManager.selectWallpaper() })
+            NoWallpaperView(selectWallpaper: selectWallpaper)
         }
     }
 }
@@ -114,14 +117,17 @@ struct DisplaySettingsView: View {
                 .accessibilityAddTraits(.isHeader)
             
             Picker("Display Mode", selection: $wallpaperManager.displayMode) {
-                ForEach(DisplayMode.allCases, id: \.self) { mode in
+                ForEach(WallpaperTypes.DisplayMode.allCases, id: \.self) { mode in
                     Text(mode.rawValue).tag(mode)
                 }
             }
             .pickerStyle(.menu)
             .accessibilityLabel("Display mode picker")
             
-            Toggle("Show on All Spaces", isOn: $wallpaperManager.showOnAllSpaces)
+            Toggle("Show on All Spaces", isOn: Binding(
+                get: { wallpaperManager.showOnAllSpaces },
+                set: { wallpaperManager.updateShowOnAllSpaces($0) }
+            ))
                 .accessibilityLabel("Show wallpaper on all spaces toggle")
         }
         .frame(maxWidth: .infinity)

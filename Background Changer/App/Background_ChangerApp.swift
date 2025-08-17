@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import Wallpaper
 
 @main
 struct Background_ChangerApp: App {
@@ -11,13 +12,15 @@ struct Background_ChangerApp: App {
     @StateObject private var themeManager = ThemeManager()
 
     var body: some Scene {
+        #if DEBUG
+        // In production we use AppCoordinator windows; this WindowGroup is preview/dev-only.
         WindowGroup {
-            MainAppView()
-                .environmentObject(appState)
-                .environmentObject(themeManager)
+            Text("Background Changer")
+                .frame(minWidth: 400, minHeight: 300)
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
+        #endif
         
         Settings {
             EmptyView() // Menu bar UI is handled by AppDelegate

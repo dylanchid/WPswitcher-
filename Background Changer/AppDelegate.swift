@@ -17,17 +17,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Properties
     private let logger = Logger(subsystem: "com.backgroundchanger", category: "app")
     private var statusItemManager: StatusItemManager?
-    private var windowManager: WindowManager?
+    private var appCoordinator: AppCoordinator?
     private var keyboardMonitor: KeyboardMonitor?
-    private var wallpaperManager: WallpaperManager = WallpaperManager.create()
+    private let wallpaperManager: WallpaperManager = WallpaperManager.create()
     private let themeManager = ThemeManager()
+    private lazy var wallpaperService = AppWallpaperService(manager: wallpaperManager)
+    private let playlistService = PlaylistService()
+    private let userSettingsService = UserSettingsService()
     
     // MARK: - NSApplicationDelegate
     func applicationDidFinishLaunching(_ notification: Notification) {
         logger.info("Application did finish launching")
         
         setupStatusItem()
-        setupWindowManager()
+        setupCoordinator()
         setupKeyboardMonitor()
         
         // Check for migration needs
@@ -61,9 +64,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemManager?.setupStatusItem()
     }
     
-    private func setupWindowManager() {
-        windowManager = WindowManager.create()
-        windowManager?.delegate = self
+    private func setupCoordinator() {
+        appCoordinator = AppCoordinator(
+            wallpaperService: wallpaperService,
+            playlistService: playlistService,
+            wallpaperManager: wallpaperManager,
+            themeManager: themeManager,
+            userSettingsService: userSettingsService
+        )
+        appCoordinator?.start()
     }
     
     private func setupKeyboardMonitor() {
@@ -96,75 +105,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     private func handleError(_ error: Error) {
-        if let wallpaperError = error as? WallpaperTypes.WallpaperError {
-            logger.error("Wallpaper error: \(wallpaperError.localizedDescription)")
-            let title: String
-            let message: String
-            let suggestion: String
-
-            switch wallpaperError {
-            case .invalidScreen:
-                title = "Invalid Screen"
-                message = "The target screen is invalid."
-                suggestion = "Please ensure the target screen is valid."
-            case .setWallpaperFailed(let reason):
-                title = "Failed to Set Wallpaper"
-                message = reason
-                suggestion = "Ensure the image is valid and try again."
-            case .playlistNotFound:
-                title = "Playlist Not Found"
-                message = "The specified playlist could not be found."
-                suggestion = "Verify the playlist you selected still exists."
-            case .invalidURL(let msg):
-                title = "Invalid Wallpaper URL"
-                message = msg
-                suggestion = "Please ensure the file exists and you have permission to access it."
-            case .fileNotFound(let msg):
-                title = "File Not Found"
-                message = msg
-                suggestion = "Please verify the file exists and try again."
-            case .invalidImage(let msg):
-                title = "Invalid Image File"
-                message = msg
-                suggestion = "Please try with a different image file."
-            case .insufficientPermissions(let msg):
-                title = "Insufficient Permissions"
-                message = msg
-                suggestion = "Grant the necessary file access permissions in System Settings."
-            case .displayError(let msg):
-                title = "Display Error"
-                message = msg
-                suggestion = "Please check your display settings and try again."
-            case .rotationError(let msg):
-                title = "Rotation Error"
-                message = msg
-                suggestion = "Please check your rotation settings and try again."
-            case .playlistError(let msg):
-                title = "Playlist Error"
-                message = msg
-                suggestion = "Please check the playlist name or content."
-            case .metadataError(let msg):
-                title = "Metadata Error"
-                message = msg
-                suggestion = "The image file might be corrupted or unsupported."
-            case .networkError(let msg):
-                title = "Network Error"
-                message = msg
-                suggestion = "Check your internet connection and try again."
-            case .systemError(let underlying):
-                title = "System Error"
-                message = underlying.localizedDescription
-                suggestion = "Please try again later or contact support."
-            }
-            showError(title: title, message: message, suggestion: suggestion)
-        } else {
-            logger.error("System error: \(error.localizedDescription)")
-            showError(
-                title: "System Error",
-                message: error.localizedDescription,
-                suggestion: "Please try again or contact support if the issue persists."
-            )
-        }
+        let alert = ErrorPresenter.alertContent(for: error)
+        logger.error("Error presented: \(alert.title) - \(alert.message)")
+        showError(title: alert.title, message: alert.message, suggestion: alert.suggestion ?? "")
     }
     
     private func showError(title: String, message: String, suggestion: String) {
@@ -196,9 +139,9 @@ extension AppDelegate: StatusItemManagerDelegate {
     func statusItemManager(_ manager: StatusItemManager, didSelectAction action: StatusItemAction) {
         switch action {
         case .openMainWindow:
-            windowManager?.showMainWindow()
+            appCoordinator?.showMainWindow()
         case .openSettings:
-            windowManager?.showSettingsWindow()
+            appCoordinator?.showSettings()
         case .quit:
             NSApplication.shared.terminate(nil)
         }
@@ -217,18 +160,19 @@ extension AppDelegate: StatusItemManagerDelegate {
     }
     
     func rotateToNext() {
-        try? wallpaperManager.rotateToNext()
+        appCoordinator?.rotateNext()
     }
     
     func rotateToPrevious() {
-        try? wallpaperManager.rotateToPrevious()
+        appCoordinator?.rotatePrevious()
     }
     
     func toggleRotation() {
+        // Mirror current state via manager for now
         if wallpaperManager.isRotating {
-            wallpaperManager.stopRotation()
+            appCoordinator?.stopRotation()
         } else {
-            wallpaperManager.startRotation(interval: wallpaperManager.rotationInterval)
+            appCoordinator?.startRotation(interval: wallpaperManager.customInterval == 0 ? 3600 : wallpaperManager.customInterval)
         }
     }
     
@@ -242,43 +186,23 @@ extension AppDelegate: StatusItemManagerDelegate {
 }
 
 // MARK: - WindowManagerDelegate
-extension AppDelegate: WindowManagerDelegate {
-    func windowManager(_ manager: WindowManager, didRequestWallpaperChange url: URL) {
-        Task {
-            await wallpaperManager.setWallpaper(from: url)
-        }
-    }
-    
-    func windowManager(_ manager: WindowManager, didRequestPlaylistRotation playlistId: UUID, interval: TimeInterval) {
-        wallpaperManager.startPlaylistRotation(playlistId: playlistId, interval: interval)
-    }
-    
-    func windowManager(_ manager: WindowManager, didRequestSettingsUpdate settings: UserSettings) {
-        Task {
-            await wallpaperManager.updateDisplayMode(settings.defaultDisplayMode)
-        }
-    }
-}
+// WindowManagerDelegate no longer used; AppCoordinator owns windows
 
 // MARK: - KeyboardMonitorDelegate
 extension AppDelegate: KeyboardMonitorDelegate {
     func keyboardMonitor(_ monitor: KeyboardMonitor, didDetectShortcut shortcut: KeyboardShortcut) {
         switch shortcut.action {
         case .nextWallpaper:
-            try? wallpaperManager.rotateToNext()
+            appCoordinator?.rotateNext()
         case .previousWallpaper:
-            try? wallpaperManager.rotateToPrevious()
+            appCoordinator?.rotatePrevious()
         case .toggleRotation:
-            if wallpaperManager.isRotating {
-                wallpaperManager.stopRotation()
-            } else {
-                wallpaperManager.startRotation(interval: wallpaperManager.rotationInterval)
-            }
+            toggleRotation()
         case .showPreferences:
-            windowManager?.showSettingsWindow()
+            appCoordinator?.showSettings()
         case .addWallpaper:
             // Could trigger an open panel via StatusItemManager; for now, open main window
-            windowManager?.showMainWindow()
+            appCoordinator?.showMainWindow()
         }
     }
 }
