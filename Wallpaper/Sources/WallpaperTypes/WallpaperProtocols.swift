@@ -3,6 +3,7 @@ import AppKit
 
 /// Protocol defining the core functionality for managing wallpapers
 @preconcurrency
+@MainActor
 public protocol WallpaperServiceProtocol {
     /// Sets a wallpaper from a URL for a specific screen with optional display mode
     func setWallpaper(from url: URL, for screen: NSScreen?, mode: DisplayMode?) async throws
@@ -37,6 +38,7 @@ public protocol WallpaperServiceProtocol {
 
 /// Protocol defining functionality for wallpaper rotation
 @preconcurrency
+@MainActor
 public protocol WallpaperRotationServiceProtocol {
     /// Starts the rotation service
     func start() async

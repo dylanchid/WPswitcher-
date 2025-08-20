@@ -1,10 +1,24 @@
 import Foundation
 import Combine
 import Wallpaper
+import WallpaperTypes
+import WallpaperTypes
 
 @MainActor
-class PlaylistService: ObservableObject, Wallpaper.PlaylistServiceProtocol {
-    public var currentPlaylist: Wallpaper.Playlist?
+final class PlaylistService: PlaylistServiceProtocol {
+    nonisolated public var currentPlaylist: Wallpaper.Playlist? {
+        get {
+            // Use MainActor.assumeIsolated to safely access the main actor property
+            MainActor.assumeIsolated { _currentPlaylist }
+        }
+        set {
+            Task { @MainActor in
+                _currentPlaylist = newValue
+            }
+        }
+    }
+    
+    private var _currentPlaylist: Wallpaper.Playlist?
     
     // MARK: - Published Properties
     @Published private(set) var playlists: [Wallpaper.Playlist] = []
@@ -61,15 +75,15 @@ class PlaylistService: ObservableObject, Wallpaper.PlaylistServiceProtocol {
         savePlaylists()
     }
     
-    public func addWallpaper(_ wallpaper: Wallpaper.WallpaperItem, to playlist: Wallpaper.Playlist) async throws {
+    public func addWallpaper(_ wallpaper: WallpaperTypes.WallpaperItem, to playlist: Wallpaper.Playlist) async throws {
         try await addWallpapersToPlaylist(playlistId: playlist.id, wallpaperIds: [wallpaper.id])
     }
     
-    public func removeWallpaper(_ wallpaper: Wallpaper.WallpaperItem, from playlist: Wallpaper.Playlist) async throws {
+    public func removeWallpaper(_ wallpaper: WallpaperTypes.WallpaperItem, from playlist: Wallpaper.Playlist) async throws {
         try await removeWallpapersFromPlaylist(playlistId: playlist.id, wallpaperIds: [wallpaper.id])
     }
     
-    public func moveWallpaper(_ wallpaper: Wallpaper.WallpaperItem, from source: Wallpaper.Playlist, to destination: Wallpaper.Playlist) async throws {
+    public func moveWallpaper(_ wallpaper: WallpaperTypes.WallpaperItem, from source: Wallpaper.Playlist, to destination: Wallpaper.Playlist) async throws {
         try await removeWallpaper(wallpaper, from: source)
         try await addWallpaper(wallpaper, to: destination)
     }
@@ -78,14 +92,20 @@ class PlaylistService: ObservableObject, Wallpaper.PlaylistServiceProtocol {
         return playlists
     }
     
-    public func getWallpapers(for playlist: Wallpaper.Playlist) async throws -> [Wallpaper.WallpaperItem] {
-        guard let p = playlists.first(where: { $0.id == playlist.id }) else {
-            throw WallpaperError.playlistError("Playlist not found")
-        }
-        return p.wallpapers
+    public func getWallpapers(for playlist: Wallpaper.Playlist) async throws -> [WallpaperTypes.WallpaperItem] {
+        return playlist.wallpapers
     }
     
-    public func reorderWallpapers(in playlist: Wallpaper.Playlist, newOrder: [Wallpaper.WallpaperItem]) async throws {
+    func getCurrentWallpaper(for playlist: Wallpaper.Playlist) throws -> URL? {
+        guard !playlist.wallpapers.isEmpty else {
+            throw WallpaperError.playlistError("Playlist is empty")
+        }
+
+        // For now, just return the first wallpaper since there's no currentIndex
+        return playlist.wallpapers.first?.url
+    }
+    
+    public func reorderWallpapers(in playlist: Wallpaper.Playlist, newOrder: [WallpaperTypes.WallpaperItem]) async throws {
         guard let index = playlists.firstIndex(where: { $0.id == playlist.id }) else {
             throw WallpaperError.playlistError("Playlist not found")
         }
@@ -113,7 +133,13 @@ class PlaylistService: ObservableObject, Wallpaper.PlaylistServiceProtocol {
         
         // TODO: This needs access to a wallpaper service or manager to get wallpaper items from IDs
         // For now, creating dummy items. This should be replaced with actual logic.
-        let newWallpapers = newIds.map { Wallpaper.WallpaperItem(id: $0, url: URL(fileURLWithPath: "/dev/null"), name: "dummy", displayMode: .fill, isFavorite: false) }
+        let newWallpapers = newIds.map { 
+            WallpaperTypes.WallpaperItem(
+                id: $0, 
+                url: URL(fileURLWithPath: "/dev/null"), 
+                name: "dummy"
+            ) 
+        }
         
         playlist.wallpapers.append(contentsOf: newWallpapers)
         

@@ -44,7 +44,7 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section(header: Text("General Settings")) {
-                Toggle("Start at Login", isOn: $rotationVM.startAtLogin)
+                Toggle("Start at Login", isOn: rotationVM.binding(\.startAtLogin))
                 Toggle("Show in Dock", isOn: rotationVM.binding(\.showInDock))
                 Toggle("Show in Menu Bar", isOn: rotationVM.binding(\.showInMenuBar))
             }
@@ -143,7 +143,7 @@ struct PlaylistSettingsView: View {
 }
 
 struct PlaylistRow: View {
-    let playlist: Playlist
+    let playlist: WallpaperTypes.Playlist
     @EnvironmentObject var themeManager: ThemeManager
     
     var body: some View {

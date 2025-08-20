@@ -2,7 +2,7 @@ import AppKit
 import Foundation
 
 /// Represents the different ways a wallpaper can be displayed on the screen
-public enum DisplayMode: String, Codable, CaseIterable {
+public enum DisplayMode: String, Codable, CaseIterable, Sendable {
     /// Fills the entire screen while maintaining aspect ratio
     case fillScreen = "Fill Screen"
     /// Fits the image to the screen while maintaining aspect ratio

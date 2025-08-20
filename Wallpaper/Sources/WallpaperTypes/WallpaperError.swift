@@ -28,6 +28,10 @@ public enum WallpaperError: LocalizedError {
     case networkError(String)
     /// System-level error
     case systemError(Error)
+    /// Unsupported file format
+    case unsupportedFormat(String)
+    /// Invalid name provided
+    case invalidName(String)
     
     /// Returns a localized description of the error
     public var errorDescription: String? {
@@ -58,6 +62,10 @@ public enum WallpaperError: LocalizedError {
             return "Network error: \(message)"
         case .systemError(let error):
             return "System error: \(error.localizedDescription)"
+        case .unsupportedFormat(let format):
+            return "Unsupported format: \(format)"
+        case .invalidName(let message):
+            return "Invalid name: \(message)"
         }
     }
     
@@ -90,6 +98,10 @@ public enum WallpaperError: LocalizedError {
             return "Please check your internet connection and try again."
         case .systemError:
             return "Please try again later or contact support if the issue persists."
+        case .unsupportedFormat:
+            return "Please use a supported image format (JPEG, PNG, HEIC, BMP, TIFF)."
+        case .invalidName:
+            return "Please provide a valid name for the wallpaper."
         }
     }
     
@@ -119,6 +131,8 @@ public enum WallpaperError: LocalizedError {
         case .metadataError: return "W010"
         case .networkError: return "W011"
         case .systemError: return "W012"
+        case .unsupportedFormat: return "W013"
+        case .invalidName: return "W014"
         }
     }
 } 

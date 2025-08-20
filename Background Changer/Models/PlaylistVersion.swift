@@ -1,18 +1,19 @@
 import Foundation
+import Wallpaper
 
 /// Represents a version of a playlist at a specific point in time
 struct PlaylistVersion: Identifiable, Codable {
     let id: UUID
     let playlistId: UUID
     let timestamp: Date
-    let playlist: Playlist
+    let playlist: Wallpaper.Playlist
     let action: PlaylistAction
     
     enum CodingKeys: String, CodingKey {
         case id, playlistId, timestamp, playlist, action
     }
     
-    init(id: UUID = UUID(), playlistId: UUID, playlist: Playlist, action: PlaylistAction) {
+    init(id: UUID = UUID(), playlistId: UUID, playlist: Wallpaper.Playlist, action: PlaylistAction) {
         self.id = id
         self.playlistId = playlistId
         self.timestamp = Date()

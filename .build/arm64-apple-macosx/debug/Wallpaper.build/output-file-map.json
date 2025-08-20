@@ -2,6 +2,12 @@
   "": {
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/master.swiftdeps"
   },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Aliases.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Aliases.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Aliases.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Aliases~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Aliases.swiftdeps"
+  },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/CacheServiceProtocol.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/CacheServiceProtocol.d",
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/CacheServiceProtocol.swift.o",
@@ -31,6 +37,12 @@
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/FileMonitor.swift.o",
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/FileMonitor~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/FileMonitor.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/SystemWallpaperService.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/SystemWallpaperService.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/SystemWallpaperService.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/SystemWallpaperService~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/SystemWallpaperService.swiftdeps"
   },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedCacheService.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/UnifiedCacheService.d",

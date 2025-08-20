@@ -16,7 +16,7 @@ final class RotationViewModel: ObservableObject {
     // MARK: - Published UI State
     @Published private(set) var isRotating: Bool = false
     @Published private(set) var rotationInterval: TimeInterval = 3600
-    @Published private(set) var playlists: [Wallpaper.Playlist] = []
+    @Published private(set) var playlists: [WallpaperTypes.Playlist] = []
     @Published private(set) var activePlaylistId: UUID?
     @Published var lastError: Error?
     @Published private(set) var userSettings: UserSettings
@@ -65,12 +65,16 @@ final class RotationViewModel: ObservableObject {
         try await playlistService.renamePlaylist(playlist, to: newName)
         self.playlists = try await playlistService.getPlaylists()
     }
+    
+    func getWallpapers(for playlist: WallpaperTypes.Playlist) async throws -> [WallpaperTypes.WallpaperItem] {
+        return try await playlistService.getWallpapers(for: playlist)
+    }
 
     // MARK: - Wallpaper Management
     func addWallpapers(to playlistId: UUID, urls: [URL]) async throws {
         guard let playlist = playlists.first(where: { $0.id == playlistId }) else { return }
         for url in urls {
-            let wallpaper = WallpaperItem(id: UUID(), url: url, name: url.lastPathComponent)
+            let wallpaper = WallpaperTypes.WallpaperItem(id: UUID(), url: url, name: url.lastPathComponent)
             try await playlistService.addWallpaper(wallpaper, to: playlist)
         }
         self.playlists = try await playlistService.getPlaylists()
@@ -103,7 +107,7 @@ final class RotationViewModel: ObservableObject {
     }
 
     // MARK: - Settings
-    func updateRotationInterval(for playlistId: UUID, interval: TimeInterval) async throws {
+    func updateRotationInterval(for playlistId: UUID, interval: TimeInterval) async {
         guard var playlist = playlists.first(where: { $0.id == playlistId }) else { return }
         playlist.rotationInterval = interval
         // The protocol doesn't specify an update method. Assuming the service persists on set.
@@ -112,11 +116,42 @@ final class RotationViewModel: ObservableObject {
         }
     }
 
-    func updatePlaybackMode(for playlistId: UUID, mode: Wallpaper.PlaybackMode) async throws {
+    func updatePlaybackMode(for playlistId: UUID, mode: WallpaperTypes.PlaybackMode) async {
         guard var playlist = playlists.first(where: { $0.id == playlistId }) else { return }
         playlist.playbackMode = mode
         if let index = playlists.firstIndex(where: { $0.id == playlistId }) {
             playlists[index] = playlist
         }
+    }
+    
+    // MARK: - Helper Methods for Bindings
+    
+    func binding<T>(_ keyPath: WritableKeyPath<UserSettings, T>) -> Binding<T> {
+        Binding(
+            get: { self.userSettings[keyPath: keyPath] },
+            set: { newValue in
+                var settings = self.userSettings
+                settings[keyPath: keyPath] = newValue
+                Task { @MainActor in
+                    try? await self.userSettingsService.updateSettings(settings)
+                    self.userSettings = settings
+                }
+            }
+        )
+    }
+    
+    func activatePlaylist(_ playlistId: UUID) async {
+        guard let playlist = playlists.first(where: { $0.id == playlistId }) else { return }
+        
+        guard !playlist.wallpapers.isEmpty else {
+            lastError = WallpaperTypes.WallpaperError.playlistError("Playlist is empty")
+            return
+        }
+        
+        var mutablePlaylistService = self.playlistService
+        mutablePlaylistService.currentPlaylist = playlist
+        self.activePlaylistId = playlist.id
+        self.isRotating = true
+        wallpaperService.startRotation(interval: playlist.rotationInterval)
     }
 }

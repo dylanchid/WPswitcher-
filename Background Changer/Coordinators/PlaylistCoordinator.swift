@@ -47,7 +47,41 @@ final class PlaylistCoordinator: BaseCoordinator {
         guard response == .alertFirstButtonReturn else { return }
 
         Task { @MainActor in
-            await viewModel.deletePlaylist(id: playlist.id)
+            do {
+                try await viewModel.deletePlaylist(id: playlist.id)
+            } catch {
+                print("Error deleting playlist: \(error.localizedDescription)")
+            }
         }
+    }
+    
+    func showWallpaperPicker(for playlist: Playlist) {
+        let openPanel = NSOpenPanel()
+        openPanel.canChooseFiles = true
+        openPanel.canChooseDirectories = false
+        openPanel.allowsMultipleSelection = true
+        openPanel.allowedContentTypes = [.image]
+
+        if openPanel.runModal() == .OK {
+            Task {
+                do {
+                    try await viewModel.addWallpapers(to: playlist.id, urls: openPanel.urls)
+                } catch {
+                    print("Error adding wallpapers: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    func showEditPlaylistView(playlist: Playlist) {
+        // This would typically trigger a flow to present the edit view
+        // For now, we'll delegate to the router's flow mechanism
+        router.activeFlow = .rename(playlist)
+    }
+
+    func showCreatePlaylistView() {
+        // This would typically trigger a flow to present the create view
+        // For now, we'll delegate to the router's flow mechanism
+        router.activeFlow = .create
     }
 }

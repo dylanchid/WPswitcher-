@@ -127,3 +127,84 @@ public class WallpaperManager {
         // Implementation for redo functionality
     }
 }
+
+// MARK: - WallpaperManager Factory Extension
+extension WallpaperManager {
+    /// Factory method to create a properly configured WallpaperManager
+    public static func create() -> WallpaperManager {
+        let wallpaperService = SystemWallpaperService()
+        return WallpaperManager(wallpaperService: wallpaperService)
+    }
+}
+
+// MARK: - Additional WallpaperManager Methods for AppDelegate Compatibility
+extension WallpaperManager {
+    // Properties that the AppDelegate expects
+    public var isRotating: Bool {
+        rotationService.isRotationEnabled
+    }
+    
+    public var customInterval: TimeInterval {
+        rotationService.rotationInterval
+    }
+    
+    public var userPlaylists: [WallpaperTypes.Playlist] {
+        // This should come from a playlist service - placeholder for now
+        []
+    }
+    
+    // Methods that the AppDelegate expects
+    public func nextWallpaper() throws {
+        Task {
+            try await rotateToNext()
+        }
+    }
+    
+    public func previousWallpaper() throws {
+        Task {
+            try await rotateToPrevious()
+        }
+    }
+    
+    public func randomWallpaper() throws {
+        Task {
+            try await rotateToNext() // For now, just rotate to next
+        }
+    }
+    
+    public func setWallpaper(from url: URL) async {
+        do {
+            try await setWallpaper(from: url, for: nil, mode: nil)
+        } catch {
+            logger.error("Failed to set wallpaper: \(error.localizedDescription)")
+        }
+    }
+    
+    public func startPlaylistRotation(playlistId: UUID, interval: TimeInterval) {
+        Task {
+            await startRotation(interval: interval)
+        }
+    }
+    
+    public func updateDisplayMode(_ mode: DisplayMode) {
+        displayMode = mode
+    }
+    
+    public func undo() throws {
+        Task {
+            try await undo()
+        }
+    }
+    
+    public func redo() throws {
+        Task {
+            try await redo()
+        }
+    }
+    
+    public func rotateToNext() throws {
+        Task {
+            try await rotateToNext()
+        }
+    }
+}

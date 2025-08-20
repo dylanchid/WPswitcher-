@@ -23,7 +23,6 @@ struct PlaylistsView: View {
                 VStack(spacing: 16) {
                     ForEach(rotationVM.playlists) { playlist in
                         PlaylistViewModule.View(
-                            wallpaperManager: wallpaperManager,
                             playlist: playlist,
                             onEdit: { p in router.startRename(p) }
                         )

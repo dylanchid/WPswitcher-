@@ -4,18 +4,16 @@ import Wallpaper
 
 public enum PlaylistViewModule {
     public struct View: SwiftUI.View {
-        private let wallpaperManager: WallpaperManager
-    private let playlist: Playlist
-    private let onEdit: (Playlist) -> Void
-        
-    public init(wallpaperManager: WallpaperManager, playlist: Playlist, onEdit: @escaping (Playlist) -> Void) {
-            self.wallpaperManager = wallpaperManager
-            self.playlist = playlist
-            self.onEdit = onEdit
-        }
-        
-        public var body: some SwiftUI.View {
-            PlaylistView(wallpaperManager: wallpaperManager, playlist: playlist, onEdit: onEdit)
-        }
+        private let playlist: Wallpaper.Playlist
+        private let onEdit: (Wallpaper.Playlist) -> Void
+
+        public init(playlist: Wallpaper.Playlist, onEdit: @escaping (Wallpaper.Playlist) -> Void) {
+                self.playlist = playlist
+                self.onEdit = onEdit
+            }
+
+            public var body: some SwiftUI.View {
+                PlaylistView(playlist: playlist, onEdit: onEdit)
+            }
     }
 } 

@@ -28,74 +28,123 @@ public class WallpaperManager: ObservableObject {
     // MARK: - Shared Instance
     static let shared = WallpaperManager.create()
     
-    // MARK: - Dependencies
-    private let wallpaperService: WallpaperTypes.WallpaperServiceProtocol
-    private let persistenceController: PersistenceController
-    private let playlistService: Wallpaper.PlaylistServiceProtocol
-
-    // MARK: - Published Properties
-    @Published private(set) var currentWallpaperPath: String
-    @Published private(set) var globalWallpapers: [URL]
-    @Published private(set) var playlists: [PlaylistEntity]
-    // Unified playlists used by UI (Wallpaper module types)
-    @Published private(set) var userPlaylists: [Wallpaper.Playlist] = []
-    @Published var displayMode: WallpaperTypes.DisplayMode
-    @Published var showOnAllSpaces: Bool
-    @Published var isRotating: Bool
-    @Published var rotationInterval: RotationInterval
-    @Published var customInterval: TimeInterval
+    // MARK: - Dependencies (Clean Architecture)
+    private let dependencies: WallpaperManagerDependencies
+    private let stateStore: AppStateStore
+    
+    // MARK: - Published Properties (Derived from State)
+    @Published private(set) var currentWallpaperPath: String = ""
+    @Published private(set) var globalWallpapers: [URL] = []
+    @Published private(set) var playlists: [PlaylistEntity] = []
+    @Published private(set) var userPlaylists: [WallpaperTypes.Playlist] = []
+    @Published var isRotating: Bool = false
+    @Published var rotationInterval: RotationInterval = .thirtyMinutes
+    @Published var customInterval: TimeInterval = 0
     @Published var currentError: WallpaperTypes.WallpaperError?
-    @Published var playbackMode: Wallpaper.PlaybackMode // New property
-    @Published var userProfile: UserProfile
+    @Published var userProfile: UserProfile = UserProfile()
     @Published var currentVersionIndex: Int = -1
     @Published var versionHistory: [PlaylistVersion] = []
     @Published var wallpapers: [WallpaperTypes.WallpaperItem] = []
     
-    // Convenience for views expecting this name
+    // Convenience properties derived from state
+    public var displayMode: WallpaperTypes.DisplayMode {
+        get { stateStore.state.displaySettings.displayMode }
+        set { stateStore.dispatch(.updateDisplayMode(newValue)) }
+    }
+    
+    public var showOnAllSpaces: Bool {
+        get { stateStore.state.displaySettings.showOnAllSpaces }
+        set { 
+            var settings = stateStore.state.displaySettings
+            settings.showOnAllSpaces = newValue
+            stateStore.dispatch(.updateDisplaySettings(settings))
+        }
+    }
+    
+    public var playbackMode: WallpaperTypes.PlaybackMode {
+        get { stateStore.state.rotationSettings.playbackMode }
+        set {
+            var settings = stateStore.state.rotationSettings
+            settings.playbackMode = newValue
+            stateStore.dispatch(.updateRotationSettings(settings))
+        }
+    }
+    
     var allWallpapers: [WallpaperTypes.WallpaperItem] { wallpapers }
 
     // MARK: - Private Properties
     private var timer: Timer?
     private var activePlaylistId: UUID?
     private var appearanceObserver: NSObjectProtocol?
+    private var shuffledIndices: [Int] = []
+    private var currentShuffleIndex: Int = 0
+    
     private var isUsingGlobalWallpapers: Bool {
         activePlaylistId == nil
     }
-    private var shuffledIndices: [Int] = [] // For shuffle mode
-    private var currentShuffleIndex: Int = 0 // For shuffle mode
-    
-    // UserDefaults keys
-    private let displayModeKey = "displayMode"
-    private let rotationIntervalKey = "rotationInterval"
-    private let customIntervalKey = "customInterval"
     
     private var currentWallpaper: URL? {
         currentWallpaperPath.isEmpty ? nil : URL(fileURLWithPath: currentWallpaperPath)
     }
 
     // MARK: - Initialization
-    init(wallpaperService: WallpaperTypes.WallpaperServiceProtocol, persistenceController: PersistenceController) {
-        self.wallpaperService = wallpaperService
-        self.persistenceController = persistenceController
-        self.playlistService = PlaylistService()
-
-        // Initialize with saved values
-        self.currentWallpaperPath = ""
-        self.globalWallpapers = []
-        self.playlists = []
-    self.displayMode = wallpaperService.displayMode
-    self.showOnAllSpaces = wallpaperService.showOnAllSpaces
-        self.rotationInterval = .thirtyMinutes
-        self.customInterval = 0
-        self.isRotating = false
-        self.playbackMode = .sequential // Initialize playbackMode
-        self.userProfile = UserProfile() // Initialize userProfile
-
-        loadPlaylists()
-        Task { @MainActor in
-            await refreshUserPlaylists()
-        }
+    init(dependencies: WallpaperManagerDependencies, stateStore: AppStateStore) {
+        self.dependencies = dependencies
+        self.stateStore = stateStore
+        
+        // Subscribe to state changes
+        setupStateObservation()
         setupAppearanceObserver()
+        
+        // Load initial state
+        Task {
+            await loadInitialState()
+        }
+    }
+    
+    private func setupStateObservation() {
+        // Observe state changes and update published properties
+        stateStore.$state
+            .map { $0.wallpapers }
+            .assign(to: &$wallpapers)
+        
+        stateStore.$state
+            .map { $0.playlists }
+            .assign(to: &$userPlaylists)
+        
+        stateStore.$state
+            .map { $0.isRotationActive }
+            .assign(to: &$isRotating)
+        
+        stateStore.$state
+            .map { $0.lastError }
+            .assign(to: &$currentError)
+        
+        stateStore.$state
+            .map { $0.currentWallpaper?.url.path ?? "" }
+            .assign(to: &$currentWallpaperPath)
+    }
+    
+    private func loadInitialState() async {
+        do {
+            try await stateStore.loadState()
+            await refreshFromState()
+        } catch {
+            currentError = WallpaperError.systemError(error)
+        }
+    }
+    
+    @MainActor
+    private func refreshFromState() async {
+        // Sync legacy properties with new state
+        wallpapers = stateStore.state.wallpapers
+        userPlaylists = stateStore.state.playlists
+        isRotating = stateStore.state.isRotationActive
+        currentError = stateStore.state.lastError
+        
+        if let currentWallpaper = stateStore.state.currentWallpaper {
+            currentWallpaperPath = currentWallpaper.url.path
+        }
     }
 
     deinit {
@@ -104,69 +153,103 @@ public class WallpaperManager: ObservableObject {
         }
     }
 
-    // MARK: - Public Methods
+    // MARK: - Public Methods (Facade over Clean Architecture)
 
     /// Sets wallpaper for specific screen with options
-    public func setWallpaper(from url: URL, for screen: NSScreen? = NSScreen.main) async {
+    public func setWallpaper(from url: URL, for screen: NSScreen? = nil) async {
         do {
-            try await wallpaperService.setWallpaper(from: url, for: screen, mode: displayMode)
-            currentWallpaperPath = url.path
+            let wallpaperItem = WallpaperItem(url: url, name: url.deletingPathExtension().lastPathComponent)
+            try await dependencies.wallpaperCoordinator.setWallpaper(wallpaperItem, on: screen)
+            stateStore.setCurrentWallpaper(wallpaperItem)
             currentError = nil
         } catch {
-            currentError = WallpaperError.displayError(error.localizedDescription)
+            currentError = WallpaperError.systemError(error)
         }
     }
 
     /// Updates display mode
     public func updateDisplayMode(_ mode: WallpaperTypes.DisplayMode) {
-        displayMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: displayModeKey)
-
-        // Reapply current wallpaper with new mode
-        if let currentWallpaper = currentWallpaper {
-            Task {
-                await setWallpaper(from: currentWallpaper)
+        Task {
+            do {
+                try await dependencies.wallpaperCoordinator.updateDisplayMode(mode)
+                stateStore.dispatch(.updateDisplayMode(mode))
+            } catch {
+                currentError = WallpaperError.systemError(error)
             }
         }
     }
 
     /// Updates whether to show wallpaper on all spaces
     public func updateShowOnAllSpaces(_ show: Bool) {
-        showOnAllSpaces = show
-        UserDefaults.standard.set(show, forKey: "showOnAllSpaces")
-        wallpaperService.showOnAllSpaces = show
+        var settings = stateStore.state.displaySettings
+        settings.showOnAllSpaces = show
+        stateStore.dispatch(.updateDisplaySettings(settings))
     }
 
     /// Starts wallpaper rotation
     public func startRotation(interval: RotationInterval = .thirtyMinutes, customInterval: TimeInterval? = nil) {
-        stopRotation()
-        isRotating = true
-        self.rotationInterval = interval
-        self.customInterval = customInterval ?? self.customInterval
-
-        UserDefaults.standard.set(interval.rawValue, forKey: rotationIntervalKey)
-        UserDefaults.standard.set(Int(self.customInterval), forKey: customIntervalKey)
-
-        let actualInterval = interval == .custom ? self.customInterval : TimeInterval(interval.rawValue)
-
-        timer = Timer.scheduledTimer(withTimeInterval: actualInterval, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            Task {
-                await self.rotateToNextWallpaper()
+        Task {
+            do {
+                stopRotation()
+                
+                self.rotationInterval = interval
+                self.customInterval = customInterval ?? self.customInterval
+                
+                let actualInterval = interval == .custom ? self.customInterval : TimeInterval(interval.rawValue)
+                
+                // Update rotation settings in state
+                var settings = stateStore.state.rotationSettings
+                settings.rotationInterval = actualInterval
+                stateStore.dispatch(.updateRotationSettings(settings))
+                
+                // Start rotation with active playlist or global wallpapers
+                if let activePlaylistId = stateStore.state.activePlaylistId,
+                   let playlist = stateStore.state.playlists.first(where: { $0.id == activePlaylistId }) {
+                    try await dependencies.wallpaperCoordinator.startRotation(playlist: playlist)
+                } else {
+                    // Create temporary playlist from global wallpapers
+                    let globalPlaylist = Playlist(
+                        name: "Global Wallpapers",
+                        wallpapers: stateStore.state.wallpapers,
+                        rotationInterval: actualInterval
+                    )
+                    if !globalPlaylist.isEmpty {
+                        try await dependencies.wallpaperCoordinator.startRotation(playlist: globalPlaylist)
+                    }
+                }
+                
+                stateStore.dispatch(.startRotation)
+                
+                // Setup timer for UI updates
+                timer = Timer.scheduledTimer(withTimeInterval: actualInterval, repeats: true) { [weak self] _ in
+                    guard let self = self else { return }
+                    Task {
+                        await self.rotateToNextWallpaper()
+                    }
+                }
+            } catch {
+                currentError = WallpaperError.systemError(error)
             }
         }
     }
 
     /// Stops wallpaper rotation
     public func stopRotation() {
-        isRotating = false
-        timer?.invalidate()
-        timer = nil
+        Task {
+            do {
+                try await dependencies.wallpaperCoordinator.stopRotation()
+                stateStore.dispatch(.stopRotation)
+                timer?.invalidate()
+                timer = nil
+            } catch {
+                currentError = WallpaperError.systemError(error)
+            }
+        }
     }
 
     /// Starts playlist rotation for the specified playlist
     public func startPlaylistRotation(playlistId: UUID, interval: TimeInterval) {
-        activePlaylistId = playlistId
+        stateStore.setActivePlaylist(playlistId)
         startRotation(interval: RotationInterval.custom, customInterval: interval)
     }
     
@@ -197,7 +280,8 @@ public class WallpaperManager: ObservableObject {
 
     // MARK: - Shims for legacy view calls
     public func loadWallpapers() async throws {
-        // Placeholder: in a full implementation, populate self.wallpapers
+        // Load wallpapers from state
+        await refreshFromState()
     }
 
     public func nextWallpaper() throws {
@@ -219,37 +303,47 @@ public class WallpaperManager: ObservableObject {
     }
 
     public func addWallpapers(_ urls: [URL]) async throws {
-        await addGlobalWallpapers(urls)
-    }
-
-    /// Adds wallpapers to global list
-    public func addGlobalWallpapers(_ urls: [URL]) async {
-        var downloadedURLs = [URL]()
-        for url in urls {
-            if url.scheme == "http" || url.scheme == "https" {
-                do {
-                    let fileURL = try await downloadImage(from: url)
-                    downloadedURLs.append(fileURL)
-                } catch {
-                    currentError = .networkError("Failed to download image from \(url.absoluteString)")
+        Task {
+            do {
+                let newWallpapers = try await dependencies.wallpaperCoordinator.addWallpapers(urls)
+                for wallpaper in newWallpapers {
+                    stateStore.addWallpaper(wallpaper)
                 }
-            } else {
-                downloadedURLs.append(url)
+            } catch {
+                currentError = WallpaperError.systemError(error)
             }
         }
-        globalWallpapers.append(contentsOf: downloadedURLs)
-        saveGlobalWallpapers()
+    }
+
+    /// Adds wallpapers to global list (legacy support)
+    public func addGlobalWallpapers(_ urls: [URL]) async {
+        do {
+            let newWallpapers = try await dependencies.wallpaperCoordinator.addWallpapers(urls)
+            for wallpaper in newWallpapers {
+                stateStore.addWallpaper(wallpaper)
+            }
+            
+            // Update global wallpapers list for legacy compatibility
+            globalWallpapers.append(contentsOf: urls)
+        } catch {
+            currentError = WallpaperError.systemError(error)
+        }
     }
 
     /// Removes wallpapers from global list
     public func removeGlobalWallpapers(_ urls: [URL]) {
+        for url in urls {
+            if let wallpaper = stateStore.state.wallpapers.first(where: { $0.url == url }) {
+                stateStore.removeWallpaper(wallpaper.id)
+            }
+        }
         globalWallpapers.removeAll { urls.contains($0) }
-        saveGlobalWallpapers()
     }
 
     /// Clears all global wallpapers
     public func clearGlobalWallpapers() {
         globalWallpapers.removeAll()
+        stateStore.dispatch(.replaceAllWallpapers([]))
         if isUsingGlobalWallpapers {
             stopRotation()
         }
@@ -257,40 +351,46 @@ public class WallpaperManager: ObservableObject {
 
     /// Creates a new playlist (Unified service)
     public func createPlaylist(name: String) async throws {
-        _ = try await playlistService.createPlaylist(name: name)
-        await refreshUserPlaylists()
+        do {
+            let playlist = try await dependencies.wallpaperCoordinator.createPlaylist(name: name)
+            stateStore.addPlaylist(playlist)
+        } catch {
+            currentError = WallpaperError.systemError(error)
+            throw error
+        }
     }
 
     /// Deletes a playlist (Unified service)
     public func deletePlaylist(id: UUID) async {
-        guard let p = userPlaylists.first(where: { $0.id == id }) else { return }
+        guard let playlist = stateStore.state.playlists.first(where: { $0.id == id }) else { return }
         do {
-            try await playlistService.deletePlaylist(p)
-            await refreshUserPlaylists()
+            try await dependencies.wallpaperCoordinator.deletePlaylist(playlist)
+            stateStore.dispatch(.removePlaylist(id))
         } catch {
-            // Propagate via currentError for now
             currentError = .playlistError(error.localizedDescription)
         }
     }
 
     /// Renames a playlist (Unified service)
     public func renamePlaylist(id: UUID, newName: String) async throws {
-        guard let p = userPlaylists.first(where: { $0.id == id }) else {
+        guard var playlist = stateStore.state.playlists.first(where: { $0.id == id }) else {
             throw WallpaperTypes.WallpaperError.playlistNotFound
         }
-        try await playlistService.renamePlaylist(p, to: newName)
-        await refreshUserPlaylists()
+        
+        try playlist.setName(newName)
+        try await dependencies.wallpaperCoordinator.updatePlaylist(playlist)
+        stateStore.dispatch(.updatePlaylist(playlist))
     }
 
     /// Adds wallpapers to a playlist (Unified service)
     public func addWallpaperToPlaylist(playlistId: UUID, urls: [URL]) async {
-        guard let p = userPlaylists.first(where: { $0.id == playlistId }) else { return }
+        guard let playlist = stateStore.state.playlists.first(where: { $0.id == playlistId }) else { return }
         do {
             for url in urls {
-                let item = WallpaperTypes.WallpaperItem(id: UUID(), url: url, name: url.lastPathComponent)
-                try await playlistService.addWallpaper(item, to: p)
+                let item = WallpaperItem(id: UUID(), url: url, name: url.lastPathComponent)
+                try await dependencies.wallpaperCoordinator.addWallpaperToPlaylist(item, playlist: playlist)
+                stateStore.dispatch(.addWallpaperToPlaylist(wallpaperId: item.id, playlistId: playlistId))
             }
-            await refreshUserPlaylists()
         } catch {
             currentError = .playlistError(error.localizedDescription)
         }
@@ -298,102 +398,118 @@ public class WallpaperManager: ObservableObject {
 
     /// Removes wallpapers from a playlist (Unified service)
     public func removeWallpapers(_ urls: [URL], from playlistId: UUID) async {
-        guard let p = userPlaylists.first(where: { $0.id == playlistId }) else { return }
+        guard let playlist = stateStore.state.playlists.first(where: { $0.id == playlistId }) else { return }
         do {
-            let playlistWallpapers = try await playlistService.getWallpapers(for: p)
-            let itemsToRemove = playlistWallpapers.filter { urls.contains($0.url) }
-            for item in itemsToRemove {
-                try await playlistService.removeWallpaper(item, from: p)
+            for url in urls {
+                if let wallpaper = playlist.wallpapers.first(where: { $0.url == url }) {
+                    try await dependencies.wallpaperCoordinator.removeWallpaperFromPlaylist(wallpaper, playlist: playlist)
+                    stateStore.dispatch(.removeWallpaperFromPlaylist(wallpaperId: wallpaper.id, playlistId: playlistId))
+                }
             }
-            await refreshUserPlaylists()
         } catch {
             currentError = .playlistError(error.localizedDescription)
         }
     }
 
+    /// Reorders wallpapers in a playlist
+    public func reorderWallpapers(in playlistId: UUID, from sourceIndex: Int, to destinationIndex: Int) async {
+        guard let playlist = self.stateStore.state.playlists.first(where: { $0.id == playlistId }) else { return }
+        do {
+            let sourceIndexSet = IndexSet(integer: sourceIndex)
+            try await self.dependencies.wallpaperCoordinator.reorderWallpapers(in: playlist, from: sourceIndexSet, to: destinationIndex)
+            
+            // Update state
+            var updatedPlaylist = playlist
+            try updatedPlaylist.moveWallpaper(from: sourceIndexSet, to: destinationIndex)
+            self.stateStore.dispatch(.updatePlaylist(updatedPlaylist))
+        } catch {
+            self.currentError = .playlistError(error.localizedDescription)
+        }
+    }
+
+    /// Sets the active playlist for rotation
+    public func setActivePlaylist(_ playlistId: UUID) {
+        self.stateStore.setActivePlaylist(playlistId)
+    }
+
+    /// Updates the playback mode for a specific playlist
+    public func updatePlaylistPlaybackMode(playlistId: UUID, mode: WallpaperTypes.PlaybackMode) {
+        var settings = self.stateStore.state.rotationSettings
+        settings.playbackMode = mode
+        self.stateStore.dispatch(.updateRotationSettings(settings))
+    }
+
     public func restoreFromBackup(id: UUID) throws {
-        try persistenceController.restoreBackup(for: id)
+        // TODO: Implement backup restoration functionality
+        throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup restoration not yet implemented"]))
     }
 
     public func deleteBackup(id: UUID) throws {
-        try persistenceController.deleteBackup(for: id)
+        // TODO: Implement backup deletion functionality
+        throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup deletion not yet implemented"]))
     }
 
-    // MARK: - Private Methods
+    // MARK: - Private Methods (Legacy Support)
     private func loadPlaylists() {
-        let context = persistenceController.container.viewContext
-        let request = PlaylistEntity.fetchRequest()
-        do {
-            playlists = try context.fetch(request)
-        } catch {
-            // Handle error
+        // Legacy method - now handled by state store
+        Task {
+            await self.refreshFromState()
         }
     }
 
     @MainActor
     private func refreshUserPlaylists() async {
-        do {
-            let list = try await playlistService.getPlaylists()
-            self.userPlaylists = list
-        } catch {
-            // Ignore for now; callers will surface errors when performing actions
-        }
+        // Legacy method - now handled by state store
+        await self.refreshFromState()
     }
 
     private func saveContext() {
-        let context = persistenceController.container.viewContext
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                // Handle error
-            }
-        }
+        // Legacy method - now handled by storage service through state store
     }
     
     private func saveGlobalWallpapers() {
-        let paths = globalWallpapers.map { $0.path }
-        UserDefaults.standard.set(paths, forKey: "globalWallpapers")
+        // Legacy method - now handled by state persistence
     }
 
-    
-
     private func rotateToNextWallpaper(random: Bool = false) async {
-        var wallpapersToRotate: [URL] = []
+        var wallpapersToRotate: [WallpaperItem] = []
         var currentWallpaperIndex: Int = -1
 
-      if isUsingGlobalWallpapers {
-            wallpapersToRotate = globalWallpapers
-            currentWallpaperIndex = globalWallpapers.firstIndex(of: URL(fileURLWithPath: currentWallpaperPath)) ?? -1
+        if let activePlaylistId = self.stateStore.state.activePlaylistId,
+           let playlist = self.stateStore.state.playlists.first(where: { $0.id == activePlaylistId }) {
+            wallpapersToRotate = playlist.wallpapers
+            currentWallpaperIndex = wallpapersToRotate.firstIndex(where: { $0.url.path == self.currentWallpaperPath }) ?? -1
         } else {
-        guard let activePlaylistId = activePlaylistId,
-            let playlist = userPlaylists.first(where: { $0.id == activePlaylistId }),
-            !playlist.wallpapers.isEmpty else { return }
-        wallpapersToRotate = playlist.wallpapers.map { $0.url }
-        currentWallpaperIndex = wallpapersToRotate.firstIndex(of: URL(fileURLWithPath: currentWallpaperPath)) ?? -1
+            // Use global wallpapers
+            wallpapersToRotate = self.stateStore.state.wallpapers
+            currentWallpaperIndex = wallpapersToRotate.firstIndex(where: { $0.url.path == self.currentWallpaperPath }) ?? -1
         }
 
         guard !wallpapersToRotate.isEmpty else { return }
 
         let nextIndex: Int
-        switch playbackMode {
+        let mode = self.stateStore.state.rotationSettings.playbackMode
+        
+        switch mode {
         case .sequential:
             nextIndex = (currentWallpaperIndex + 1) % wallpapersToRotate.count
         case .random:
             nextIndex = Int.random(in: 0..<wallpapersToRotate.count)
         case .shuffle:
-            if shuffledIndices.isEmpty || currentShuffleIndex >= shuffledIndices.count {
-                shuffledIndices = Array(0..<wallpapersToRotate.count).shuffled()
-                currentShuffleIndex = 0
+            if self.shuffledIndices.isEmpty || self.currentShuffleIndex >= self.shuffledIndices.count {
+                self.shuffledIndices = Array(0..<wallpapersToRotate.count).shuffled()
+                self.currentShuffleIndex = 0
             }
-            nextIndex = shuffledIndices[currentShuffleIndex]
-            currentShuffleIndex += 1
+            nextIndex = self.shuffledIndices[self.currentShuffleIndex]
+            self.currentShuffleIndex += 1
         }
-        await setWallpaper(from: wallpapersToRotate[nextIndex])
+        
+        let nextWallpaper = wallpapersToRotate[nextIndex]
+        await self.setWallpaper(from: nextWallpaper.url)
     }
 
     private func setupAppearanceObserver() {
-        appearanceObserver = NotificationCenter.default.addObserver(
+        self.appearanceObserver = NotificationCenter.default.addObserver(
             forName: NSNotification.Name("AppleInterfaceThemeChangedNotification"),
             object: nil,
             queue: .main
@@ -401,8 +517,8 @@ public class WallpaperManager: ObservableObject {
             guard let self = self else { return }
             
             Task { @MainActor in
-            guard let activePlaylistId = self.activePlaylistId,
-                let playlist = self.userPlaylists.first(where: { $0.id == activePlaylistId }) else { return }
+                guard let activePlaylistId = self.stateStore.state.activePlaylistId,
+                    let _ = self.stateStore.state.playlists.first(where: { $0.id == activePlaylistId }) else { return }
 
                 // Check if playlist should change based on appearance
                 // If following system appearance, rotate to next
@@ -418,19 +534,50 @@ public class WallpaperManager: ObservableObject {
 extension WallpaperManager {
     nonisolated static func create() -> WallpaperManager {
         // Create dependencies
-        let rotationService = MockWallpaperRotationService()
         let persistenceController = PersistenceController.shared
         
         // Create the manager on main actor
         return MainActor.assumeIsolated {
+            // Create services
+            let storageService = DefaultStorageService()
+            let cacheService = DefaultCacheService()
+            
+            // Create mock services for rotation (replace with real implementations)
+            let rotationService = MockWallpaperRotationService()
             let wallpaperService = WallpaperService(
                 workspace: NSWorkspace.shared,
                 fileManager: .default,
                 userDefaults: .standard,
                 rotationService: rotationService
             )
+            let playlistService = PlaylistService()
             
-            return WallpaperManager(wallpaperService: wallpaperService as! WallpaperTypes.WallpaperServiceProtocol, persistenceController: persistenceController)
+            // Create coordinator
+            let coordinator = WallpaperCoordinator(
+                wallpaperService: wallpaperService as! WallpaperTypes.WallpaperServiceProtocol,
+                playlistService: playlistService,
+                rotationService: rotationService,
+                cacheService: cacheService
+            )
+            
+            // Create migration coordinator
+            let migrationCoordinator = MigrationCoordinator(
+                migrations: [],
+                storageService: storageService
+            )
+            
+            // Create dependencies container
+            let dependencies = DefaultWallpaperManagerDependencies(
+                wallpaperCoordinator: coordinator,
+                storageService: storageService,
+                cacheService: cacheService,
+                migrationCoordinator: migrationCoordinator
+            )
+            
+            // Create state store
+            let stateStore = AppStateStore(storageService: storageService)
+            
+            return WallpaperManager(dependencies: dependencies, stateStore: stateStore)
         }
     }
 }

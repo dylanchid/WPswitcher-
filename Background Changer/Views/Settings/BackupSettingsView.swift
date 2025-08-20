@@ -11,19 +11,35 @@ struct BackupSettingsView: View {
     var body: some View {
         Form {
             Section(header: Text("Auto Backup")) {
-                Toggle("Enable Auto Backup", isOn: $wallpaperManager.userSettings.backup.autoBackup)
-                
+                Toggle("Enable Auto Backup", isOn: Binding(get: {
+                    wallpaperManager.userSettings.backup.autoBackup
+                }, set: { newValue in
+                    wallpaperManager.userSettings.backup.autoBackup = newValue
+                }))
+
                 if wallpaperManager.userSettings.backup.autoBackup {
-                    Picker("Backup Interval", selection: $wallpaperManager.userSettings.backup.backupInterval) {
+                    Picker("Backup Interval", selection: Binding(get: {
+                        wallpaperManager.userSettings.backup.backupInterval
+                    }, set: { newValue in
+                        wallpaperManager.userSettings.backup.backupInterval = newValue
+                    })) {
                         Text("Daily").tag(TimeInterval(86400))
                         Text("Weekly").tag(TimeInterval(604800))
                         Text("Monthly").tag(TimeInterval(2592000))
                     }
-                    
-                    TextField("Backup Location", text: $wallpaperManager.userSettings.backup.backupLocation)
-                    
+
+                    TextField("Backup Location", text: Binding(get: {
+                        wallpaperManager.userSettings.backup.backupLocation
+                    }, set: { newValue in
+                        wallpaperManager.userSettings.backup.backupLocation = newValue
+                    }))
+
                     Stepper("Max Backups: \(wallpaperManager.userSettings.backup.maxBackups)",
-                           value: $wallpaperManager.userSettings.backup.maxBackups,
+                           value: Binding(get: {
+                            wallpaperManager.userSettings.backup.maxBackups
+                           }, set: { newValue in
+                            wallpaperManager.userSettings.backup.maxBackups = newValue
+                           }),
                            in: 1...10)
                 }
             }

@@ -3,7 +3,7 @@ import Wallpaper
 
 // View component
 struct PlaylistPreview: View {
-    let playlist: Playlist
+    let playlist: Wallpaper.Playlist
     let previewData: PlaylistPreviewData
     
     var body: some View {

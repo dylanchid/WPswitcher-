@@ -56,6 +56,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/WallpaperManager+Factory.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Managers/KeyboardMonitor.swift"
         },
         {
@@ -262,6 +266,7 @@
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistCoordinator.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/NSImage+Dimensions.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation.swift.o",
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager+Factory.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardMonitor.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StatusItemManager.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WindowManager.swift.o",
@@ -382,6 +387,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager+Factory.swift.o"
         },
         {
           "kind" : "file",
@@ -577,6 +586,7 @@
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Coordinators/PlaylistCoordinator.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/NSImage+Dimensions.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/URL+Validation.swift",
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/WallpaperManager+Factory.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Managers/KeyboardMonitor.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Managers/StatusItemManager.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Managers/WindowManager.swift",
@@ -870,6 +880,10 @@
       "inputs" : [
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Aliases.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/CacheServiceProtocol.swift"
         },
         {
@@ -887,6 +901,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/FileMonitor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/SystemWallpaperService.swift"
         },
         {
           "kind" : "file",
@@ -929,11 +947,13 @@
       "moduleName" : "Wallpaper",
       "moduleOutputPath" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Modules/Wallpaper.swiftmodule",
       "objects" : [
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Aliases.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/CacheServiceProtocol.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/PlaylistServiceProtocol.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/WallpaperRotationServiceProtocol.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/WallpaperServiceProtocol.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/FileMonitor.swift.o",
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/SystemWallpaperService.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/UnifiedCacheService.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/UnifiedPlaylistService.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/UnifiedWallpaperService.swift.o",
@@ -988,6 +1008,10 @@
       "outputs" : [
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Aliases.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/CacheServiceProtocol.swift.o"
         },
         {
@@ -1005,6 +1029,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/FileMonitor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/SystemWallpaperService.swift.o"
         },
         {
           "kind" : "file",
@@ -1037,11 +1065,13 @@
       ],
       "prepareForIndexing" : false,
       "sources" : [
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Aliases.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/CacheServiceProtocol.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/PlaylistServiceProtocol.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/WallpaperRotationServiceProtocol.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/WallpaperServiceProtocol.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/FileMonitor.swift",
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/SystemWallpaperService.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedCacheService.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedPlaylistService.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedWallpaperService.swift",
@@ -1060,6 +1090,14 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/DisplayMode.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/PlaybackMode.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/Playlist.swift"
         },
         {
           "kind" : "file",
@@ -1095,6 +1133,8 @@
       "moduleOutputPath" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Modules/WallpaperTypes.swiftmodule",
       "objects" : [
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode.swift.o",
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/PlaybackMode.swift.o",
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Playlist.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Types.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperError.swift.o",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/WallpaperItem.swift.o",
@@ -1152,6 +1192,14 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/PlaybackMode.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Playlist.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Types.swift.o"
         },
         {
@@ -1178,6 +1226,8 @@
       "prepareForIndexing" : false,
       "sources" : [
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/DisplayMode.swift",
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/PlaybackMode.swift",
+        "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/Playlist.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/Types.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/WallpaperError.swift",
         "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/WallpaperItem.swift",
@@ -1207,6 +1257,7 @@
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Coordinators/PlaylistCoordinator.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/NSImage+Dimensions.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/URL+Validation.swift",
+      "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/WallpaperManager+Factory.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Managers/KeyboardMonitor.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Managers/StatusItemManager.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Managers/WindowManager.swift",
@@ -1421,11 +1472,13 @@
       "Wallpaper",
       "-incremental",
       "-c",
+      "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Aliases.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/CacheServiceProtocol.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/PlaylistServiceProtocol.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/WallpaperRotationServiceProtocol.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/WallpaperServiceProtocol.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/FileMonitor.swift",
+      "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/SystemWallpaperService.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedCacheService.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedPlaylistService.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedWallpaperService.swift",
@@ -1485,6 +1538,8 @@
       "-incremental",
       "-c",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/DisplayMode.swift",
+      "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/PlaybackMode.swift",
+      "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/Playlist.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/Types.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/WallpaperError.swift",
       "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/WallpaperItem.swift",
@@ -1625,6 +1680,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/URL+Validation.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/WallpaperManager+Factory.swift"
         },
         {
           "kind" : "file",
@@ -2006,6 +2065,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager+Factory.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager.swift.o"
         },
         {
@@ -2026,6 +2089,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Aliases.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/CacheServiceProtocol.swift.o"
         },
         {
@@ -2035,6 +2102,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/PlaylistServiceProtocol.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/SystemWallpaperService.swift.o"
         },
         {
           "kind" : "file",
@@ -2071,6 +2142,14 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/PlaybackMode.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Playlist.swift.o"
         },
         {
           "kind" : "file",
@@ -2306,6 +2385,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager+Factory.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager.swift.o"
         },
         {
@@ -2358,6 +2441,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/Aliases.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/CacheServiceProtocol.swift.o"
         },
         {
@@ -2367,6 +2454,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/PlaylistServiceProtocol.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/Wallpaper.build/SystemWallpaperService.swift.o"
         },
         {
           "kind" : "file",
@@ -2403,6 +2494,14 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/PlaybackMode.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Playlist.swift.o"
         },
         {
           "kind" : "file",
@@ -2474,6 +2573,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Aliases.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/CacheServiceProtocol.swift"
         },
         {
@@ -2491,6 +2594,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/FileMonitor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/SystemWallpaperService.swift"
         },
         {
           "kind" : "file",
@@ -2529,6 +2636,14 @@
         {
           "kind" : "file",
           "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/DisplayMode.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/PlaybackMode.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/Playlist.swift"
         },
         {
           "kind" : "file",

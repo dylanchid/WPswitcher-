@@ -4,6 +4,7 @@ import WallpaperTypes
 
 /// Protocol defining the core wallpaper service functionality
 @preconcurrency
+@MainActor
 public protocol WallpaperServiceProtocol: Sendable {
     // MARK: - Wallpaper Management
     func setWallpaper(from url: URL, for screen: NSScreen?, mode: DisplayMode?) async throws

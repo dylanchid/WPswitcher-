@@ -22,9 +22,9 @@ class PlaylistViewModel: ObservableObject {
     }
     
     let wallpaperManager: WallpaperManager
-    let playlist: Playlist
-    let onEdit: (Wallpaper.Playlist) -> Void
-    var onDelete: ((Wallpaper.Playlist) -> Void)?
+    let playlist: WallpaperTypes.Playlist
+    let onEdit: (WallpaperTypes.Playlist) -> Void
+    var onDelete: ((WallpaperTypes.Playlist) -> Void)?
     
     // Version history properties
     var canUndo: Bool {
@@ -39,7 +39,7 @@ class PlaylistViewModel: ObservableObject {
         wallpaperManager.versionHistory
     }
     
-    init(playlist: Wallpaper.Playlist, onEdit: @escaping (Wallpaper.Playlist) -> Void) {
+    init(playlist: WallpaperTypes.Playlist, onEdit: @escaping (WallpaperTypes.Playlist) -> Void) {
         self.wallpaperManager = .shared
         self.playlist = playlist
         self.onEdit = onEdit
@@ -59,19 +59,19 @@ class PlaylistViewModel: ObservableObject {
     // Delete is handled by the coordinator; trigger from the View via router
     
     func moveWallpaper(from sourceIndex: Int, to destinationIndex: Int) {
-        Task { @MainActor in
+    let _: Task<Void, Never> = Task { @MainActor in
             await wallpaperManager.reorderWallpapers(in: playlist.id, from: sourceIndex, to: destinationIndex)
         }
     }
     
     func setWallpaper(from url: URL) {
-        Task {
+    let _: Task<Void, Never> = Task {
             await wallpaperManager.setWallpaper(from: url)
             wallpaperManager.setActivePlaylist(playlist.id)
         }
     }
     
-    func updatePlaybackMode(_ mode: Wallpaper.PlaybackMode) {
+    func updatePlaybackMode(_ mode: WallpaperTypes.PlaybackMode) {
         wallpaperManager.updatePlaylistPlaybackMode(playlistId: playlist.id, mode: mode)
     }
     

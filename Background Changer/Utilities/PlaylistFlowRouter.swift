@@ -39,4 +39,22 @@ final class PlaylistFlowRouter: ObservableObject {
     }
 
     func dismiss() { activeFlow = nil }
+    
+    func present<Content: View>(view: Content, as presentationStyle: PresentationStyle) {
+        // For now, we'll just set the active flow to trigger UI updates
+        // In a more complete implementation, this would handle actual presentation
+        switch presentationStyle {
+        case .sheet:
+            activeFlow = .create // This is simplified - you'd want more specific flows
+        case .window, .popover:
+            // Handle other presentation styles
+            break
+        }
+    }
+}
+
+enum PresentationStyle {
+    case sheet
+    case window
+    case popover
 }

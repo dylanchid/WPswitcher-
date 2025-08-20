@@ -117,7 +117,9 @@ struct PlaylistView: View {
                     Image(systemName: "pencil")
                 }
                 
-                Button(action: { (router.coordinator as? PlaylistCoordinator)?.confirmDelete(playlist: viewModel.playlist) }) {
+                Button(action: { 
+                    router.coordinator?.confirmDelete(playlist: viewModel.playlist)
+                }) {
                     Image(systemName: "trash")
                 }
             }

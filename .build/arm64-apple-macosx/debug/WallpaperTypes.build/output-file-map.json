@@ -8,6 +8,18 @@
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/DisplayMode.swiftdeps"
   },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/PlaybackMode.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/PlaybackMode.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/PlaybackMode.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/PlaybackMode~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/PlaybackMode.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/Playlist.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Playlist.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Playlist.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Playlist~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Playlist.swiftdeps"
+  },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/WallpaperTypes/Types.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Types.d",
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/WallpaperTypes.build/Types.swift.o",

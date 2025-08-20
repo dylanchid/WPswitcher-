@@ -3,6 +3,7 @@ import WallpaperTypes
 
 /// Protocol defining the wallpaper rotation service functionality
 @preconcurrency
+@MainActor
 public protocol WallpaperRotationServiceProtocol {
     // MARK: - Properties
     var isRotating: Bool { get }

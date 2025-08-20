@@ -8,6 +8,12 @@
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/Background_ChangerTests~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/Background_ChangerTests.swiftdeps"
   },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background ChangerTests/EnhancedSystemTests.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/EnhancedSystemTests.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/EnhancedSystemTests.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/EnhancedSystemTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/EnhancedSystemTests.swiftdeps"
+  },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background ChangerTests/PerformanceTests.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/PerformanceTests.d",
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/PerformanceTests.swift.o",
@@ -25,6 +31,12 @@
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/RotationViewModelTests.swift.o",
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/RotationViewModelTests~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/RotationViewModelTests.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background ChangerTests/TestUtilities.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/TestUtilities.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/TestUtilities.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/TestUtilities~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/TestUtilities.swiftdeps"
   },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background ChangerTests/Wallpaper/WallpaperTests.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChangerTests.build/WallpaperTests.d",

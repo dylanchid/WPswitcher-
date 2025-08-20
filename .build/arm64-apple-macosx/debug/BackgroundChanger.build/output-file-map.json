@@ -14,6 +14,48 @@
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppDelegate~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppDelegate.swiftdeps"
   },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Architecture/AppState.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppState.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppState.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppState~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppState.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Architecture/ArchitectureSummary.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ArchitectureSummary.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ArchitectureSummary.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ArchitectureSummary~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ArchitectureSummary.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Architecture/ConcreteServices.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ConcreteServices.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ConcreteServices.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ConcreteServices~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ConcreteServices.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Architecture/MigrationSystem.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationSystem.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationSystem.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationSystem~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/MigrationSystem.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Architecture/StateManagement.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StateManagement.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StateManagement.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StateManagement~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StateManagement.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Architecture/StateStore.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StateStore.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StateStore.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StateStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/StateStore.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Architecture/WallpaperManagerDependencies.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManagerDependencies.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManagerDependencies.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManagerDependencies~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManagerDependencies.swiftdeps"
+  },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Coordinators/AppCoordinator.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppCoordinator.d",
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppCoordinator.swift.o",
@@ -43,6 +85,12 @@
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation.swift.o",
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/URL+Validation.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Extensions/WallpaperManager+Factory.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager+Factory.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager+Factory.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager+Factory~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperManager+Factory.swiftdeps"
   },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Managers/KeyboardMonitor.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/KeyboardMonitor.d",
@@ -85,6 +133,12 @@
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppError.swift.o",
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppError~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppError.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Models/Error/EnhancedErrors.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/EnhancedErrors.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/EnhancedErrors.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/EnhancedErrors~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/EnhancedErrors.swiftdeps"
   },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Models/Migration/AppVersion.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AppVersion.d",
@@ -152,6 +206,18 @@
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/GlassCardModifier~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/GlassCardModifier.swiftdeps"
   },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Services/AdaptiveCache.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AdaptiveCache.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AdaptiveCache.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AdaptiveCache~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/AdaptiveCache.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Services/ImageProcessor.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ImageProcessor.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ImageProcessor.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ImageProcessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/ImageProcessor.swiftdeps"
+  },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Services/Persistence.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Persistence.d",
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/Persistence.swift.o",
@@ -169,6 +235,12 @@
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperServiceProtocol.swift.o",
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperServiceProtocol~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperServiceProtocol.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Services/SmartRotationEngine.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/SmartRotationEngine.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/SmartRotationEngine.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/SmartRotationEngine~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/SmartRotationEngine.swiftdeps"
   },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Services/UserSettingsService.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/UserSettingsService.d",
@@ -199,6 +271,12 @@
     "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistFlowRouter.swift.o",
     "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistFlowRouter~partial.swiftmodule",
     "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/PlaylistFlowRouter.swiftdeps"
+  },
+  "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/Utilities/WallpaperFileMonitor.swift": {
+    "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperFileMonitor.d",
+    "object": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperFileMonitor.swift.o",
+    "swiftmodule": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperFileMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/WallpaperFileMonitor.swiftdeps"
   },
   "/Users/dylanchidambaram/Documents/Software/WPswitcher+/Background Changer/ViewModels/RotationViewModel.swift": {
     "dependencies": "/Users/dylanchidambaram/Documents/Software/WPswitcher+/.build/arm64-apple-macosx/debug/BackgroundChanger.build/RotationViewModel.d",

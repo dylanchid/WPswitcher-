@@ -1,8 +1,10 @@
+/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Aliases.swift
 /Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/CacheServiceProtocol.swift
 /Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/PlaylistServiceProtocol.swift
 /Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/WallpaperRotationServiceProtocol.swift
 /Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Protocols/WallpaperServiceProtocol.swift
 /Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/FileMonitor.swift
+/Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/SystemWallpaperService.swift
 /Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedCacheService.swift
 /Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedPlaylistService.swift
 /Users/dylanchidambaram/Documents/Software/WPswitcher+/Wallpaper/Sources/Wallpaper/Services/UnifiedWallpaperService.swift
