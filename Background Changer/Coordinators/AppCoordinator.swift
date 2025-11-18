@@ -87,14 +87,16 @@ final class AppCoordinator: BaseCoordinator {
 
     private func createSettingsWindowIfNeeded() {
         guard settingsWindow == nil else { return }
-    let vm = RotationViewModel(wallpaperService: wallpaperService,
-                   playlistService: playlistService,
-                   userSettingsService: userSettingsService)
+        let vm = RotationViewModel(
+            wallpaperService: wallpaperService,
+            playlistService: playlistService,
+            userSettingsService: userSettingsService
+        )
         let content = SettingsView()
             .environmentObject(vm)
             .environmentObject(themeManager)
             .environmentObject(wallpaperManager)
-        .environmentObject(playlistFlowRouter)
+            .environmentObject(playlistFlowRouter)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 640, height: 440),
             styleMask: [.titled, .closable],

@@ -16,20 +16,23 @@ final class PlaylistService: PlaylistServiceProtocol {
             }
         }
     }
-    
+
     private var _currentPlaylist: Wallpaper.Playlist?
-    
+
     // MARK: - Published Properties
     @Published private(set) var playlists: [Wallpaper.Playlist] = []
     @Published private(set) var activePlaylistId: UUID?
     @Published private(set) var isRotating: Bool = false
     @Published private(set) var rotationInterval: TimeInterval = 3600 // Default 1 hour
-    
+
     // MARK: - Private Properties
     private let userDefaults: UserDefaults
     private let maxPlaylists = 20
     private let playlistsKey = "savedPlaylists"
     private let activePlaylistKey = "activePlaylist"
+
+    // Wallpaper lookup closure - set by owner to resolve IDs to wallpaper items
+    var wallpaperLookup: ((UUID) -> WallpaperTypes.WallpaperItem?)?
     
     // MARK: - Initialization
     init(userDefaults: UserDefaults = .standard) {
@@ -125,23 +128,30 @@ final class PlaylistService: PlaylistServiceProtocol {
         guard let index = playlists.firstIndex(where: { $0.id == playlistId }) else {
             throw WallpaperError.playlistError("Playlist not found")
         }
-        
+
         var playlist = playlists[index]
         let existingIds = Set(playlist.wallpapers.map { $0.id })
         let newIds = wallpaperIds.subtracting(existingIds)
-        
-        // TODO: This needs access to a wallpaper service or manager to get wallpaper items from IDs
-        // For now, creating dummy items. This should be replaced with actual logic.
-        let newWallpapers = newIds.map { 
-            WallpaperTypes.WallpaperItem(
-                id: $0, 
-                url: URL(fileURLWithPath: "/dev/null"), 
-                name: "dummy"
-            ) 
+
+        // Resolve wallpaper IDs to actual items using the lookup closure
+        var newWallpapers: [WallpaperTypes.WallpaperItem] = []
+        var notFoundIds: [UUID] = []
+
+        for id in newIds {
+            if let lookup = wallpaperLookup, let wallpaper = lookup(id) {
+                newWallpapers.append(wallpaper)
+            } else {
+                notFoundIds.append(id)
+            }
         }
-        
+
+        // Report any wallpapers that couldn't be found
+        if !notFoundIds.isEmpty {
+            throw WallpaperError.playlistError("Could not find \(notFoundIds.count) wallpaper(s)")
+        }
+
         playlist.wallpapers.append(contentsOf: newWallpapers)
-        
+
         playlists[index] = playlist
         savePlaylists()
     }

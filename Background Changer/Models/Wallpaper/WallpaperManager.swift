@@ -683,7 +683,15 @@ extension WallpaperManager {
                 rotationService: rotationService
             )
             let playlistService = PlaylistService()
-            
+
+            // Create state store first so we can wire up dependencies
+            let stateStore = AppStateStore(storageService: storageService)
+
+            // Wire up wallpaper lookup for PlaylistService
+            playlistService.wallpaperLookup = { [weak stateStore] id in
+                return stateStore?.state.wallpapers.first { $0.id == id }
+            }
+
             // Create coordinator
             // Note: WallpaperService conforms to WallpaperTypes.WallpaperServiceProtocol
             guard let wallpaperServiceProtocol = wallpaperService as? WallpaperTypes.WallpaperServiceProtocol else {
@@ -696,13 +704,13 @@ extension WallpaperManager {
                 rotationService: rotationService,
                 cacheService: cacheService
             )
-            
+
             // Create migration coordinator
             let migrationCoordinator = MigrationCoordinator(
                 migrations: [],
                 storageService: storageService
             )
-            
+
             // Create dependencies container
             let dependencies = DefaultWallpaperManagerDependencies(
                 wallpaperCoordinator: coordinator,
@@ -710,10 +718,7 @@ extension WallpaperManager {
                 cacheService: cacheService,
                 migrationCoordinator: migrationCoordinator
             )
-            
-            // Create state store
-            let stateStore = AppStateStore(storageService: storageService)
-            
+
             return WallpaperManager(dependencies: dependencies, stateStore: stateStore)
         }
     }
