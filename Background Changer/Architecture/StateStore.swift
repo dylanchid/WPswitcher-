@@ -39,7 +39,7 @@ public final class StateStore: ObservableObject {
     public func dispatch(_ action: AppAction) async throws {
         // Prevent concurrent modifications
         guard !isProcessingAction else {
-            throw WallpaperError.stateManagement(.concurrentModification)
+            throw AppError.stateManagement(.concurrentModification)
         }
         
         isProcessingAction = true
@@ -78,7 +78,7 @@ public final class StateStore: ObservableObject {
             
             // Set error in state for UI to handle
             var errorState = state
-            errorState.lastError = error as? WallpaperError ?? WallpaperError.systemOperation(.serviceUnavailable(error.localizedDescription))
+            errorState.lastError = error as? AppError ?? AppError.systemOperation(.serviceUnavailable(error.localizedDescription))
             state = errorState
             
             throw error
@@ -88,7 +88,7 @@ public final class StateStore: ObservableObject {
     // MARK: - Undo/Redo Operations
     public func undo() throws {
         guard canUndo else {
-            throw WallpaperError.stateManagement(.noUndoAvailable)
+            throw AppError.stateManagement(.noUndoAvailable)
         }
         
         currentHistoryIndex -= 1
@@ -98,7 +98,7 @@ public final class StateStore: ObservableObject {
     
     public func redo() throws {
         guard canRedo else {
-            throw WallpaperError.stateManagement(.noRedoAvailable)
+            throw AppError.stateManagement(.noRedoAvailable)
         }
         
         currentHistoryIndex += 1
@@ -163,35 +163,35 @@ public final class StateStore: ObservableObject {
         // Validate active playlist exists
         if let activePlaylistId = state.activePlaylistId {
             guard state.playlists.contains(where: { $0.id == activePlaylistId }) else {
-                throw WallpaperError.stateManagement(.playlistNotFound)
+                throw AppError.stateManagement(.playlistNotFound)
             }
         }
-        
+
         // Validate current wallpaper exists in wallpapers collection
         if let currentWallpaper = state.currentWallpaper {
             guard state.wallpapers.contains(where: { $0.id == currentWallpaper.id }) else {
-                throw WallpaperError.stateManagement(.invalidWallpaper)
+                throw AppError.stateManagement(.invalidWallpaper)
             }
         }
-        
+
         // Validate playlist wallpapers exist in main collection
         for playlist in state.playlists {
             for wallpaper in playlist.wallpapers {
                 guard state.wallpapers.contains(where: { $0.id == wallpaper.id }) else {
-                    throw WallpaperError.stateManagement(.invalidWallpaper)
+                    throw AppError.stateManagement(.invalidWallpaper)
                 }
             }
         }
-        
+
         // Validate no duplicate IDs
         let wallpaperIds = state.wallpapers.map { $0.id }
         guard wallpaperIds.count == Set(wallpaperIds).count else {
-            throw WallpaperError.stateManagement(.corruptedState)
+            throw AppError.stateManagement(.corruptedState)
         }
-        
+
         let playlistIds = state.playlists.map { $0.id }
         guard playlistIds.count == Set(playlistIds).count else {
-            throw WallpaperError.stateManagement(.corruptedState)
+            throw AppError.stateManagement(.corruptedState)
         }
     }
     
@@ -307,7 +307,7 @@ extension StateStore {
         state.isRotationActive
     }
     
-    public var currentError: WallpaperError? {
+    public var currentError: AppError? {
         state.lastError
     }
 }

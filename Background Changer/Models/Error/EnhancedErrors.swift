@@ -4,7 +4,8 @@ import AppKit
 // MARK: - Enhanced Error System with Recovery Actions
 
 /// Rich error types with recovery actions and detailed context
-public enum WallpaperError: LocalizedError, Equatable {
+/// Named AppError to avoid conflict with WallpaperTypes.WallpaperError
+public enum AppError: LocalizedError, Equatable {
     case invalidImage(URL, reason: ImageErrorReason)
     case playlistOperation(PlaylistError)
     case systemOperation(SystemError)
@@ -307,21 +308,25 @@ public struct SystemContext {
 }
 
 // MARK: - Legacy Error Support
-extension WallpaperError {
+extension AppError {
     // Helper methods to create errors from legacy error types
-    public static func systemError(_ error: NSError) -> WallpaperError {
+    public static func systemError(_ error: NSError) -> AppError {
         return .systemOperation(.serviceUnavailable(error.localizedDescription))
     }
-    
-    public static func fileNotFound(_ path: String) -> WallpaperError {
+
+    public static func systemError(_ error: Error) -> AppError {
+        return .systemOperation(.serviceUnavailable(error.localizedDescription))
+    }
+
+    public static func fileNotFound(_ path: String) -> AppError {
         return .systemOperation(.insufficientPermissions("File access: \(path)"))
     }
-    
-    public static func invalidURL(_ url: String) -> WallpaperError {
+
+    public static func invalidURL(_ url: String) -> AppError {
         return .network(.invalidURL(url))
     }
-    
-    public static func playlistError(_ message: String) -> WallpaperError {
+
+    public static func playlistError(_ message: String) -> AppError {
         return .playlistOperation(.invalidName(message))
     }
 }

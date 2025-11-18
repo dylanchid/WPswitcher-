@@ -50,7 +50,7 @@ public final class WallpaperCoordinator: WallpaperCoordinatorProtocol {
     public func setWallpaper(_ item: WallpaperItem, on screen: NSScreen?) async throws {
         // Validate wallpaper through state store
         guard stateStore.state.wallpapers.contains(where: { $0.id == item.id }) else {
-            throw WallpaperError.stateManagement(.invalidWallpaper)
+            throw AppError.stateManagement(.invalidWallpaper)
         }
         
         let targetScreen = screen ?? NSScreen.main
@@ -82,7 +82,7 @@ public final class WallpaperCoordinator: WallpaperCoordinatorProtocol {
     
     public func updateDisplayMode(_ mode: DisplayMode) async throws {
         guard let currentWallpaper = stateStore.state.currentWallpaper else {
-            throw WallpaperError.stateManagement(.invalidWallpaper)
+            throw AppError.stateManagement(.invalidWallpaper)
         }
         
         // Update display settings through state store
@@ -95,12 +95,12 @@ public final class WallpaperCoordinator: WallpaperCoordinatorProtocol {
     // MARK: - Rotation Operations
     public func startRotation(playlist: Playlist) async throws {
         guard !playlist.wallpapers.isEmpty else {
-            throw WallpaperError.playlistOperation(.empty)
+            throw AppError.playlistOperation(.empty)
         }
-        
+
         // Validate playlist exists in state
         guard stateStore.state.playlists.contains(where: { $0.id == playlist.id }) else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
         
         // Start rotation through state store
@@ -131,11 +131,11 @@ public final class WallpaperCoordinator: WallpaperCoordinatorProtocol {
         
         for url in urls {
             guard url.isFileURL else {
-                throw WallpaperError.network(.invalidURL(url.absoluteString))
+                throw AppError.network(.invalidURL(url.absoluteString))
             }
-            
+
             guard FileManager.default.fileExists(atPath: url.path) else {
-                throw WallpaperError.systemOperation(.insufficientPermissions("File not found: \(url.path)"))
+                throw AppError.systemOperation(.insufficientPermissions("File not found: \(url.path)"))
             }
             
             do {
@@ -189,7 +189,7 @@ public final class WallpaperCoordinator: WallpaperCoordinatorProtocol {
         let playlistId = try await stateStore.createPlaylist(name: name)
         
         guard let playlist = stateStore.state.playlists.first(where: { $0.id == playlistId }) else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
         
         return playlist
@@ -229,7 +229,7 @@ public final class WallpaperCoordinator: WallpaperCoordinatorProtocol {
         case .deleted, .accessLost:
             do {
                 try await removeWallpaper(wallpaper)
-                try await stateStore.dispatch(AppAction.setError(WallpaperError.systemOperation(.insufficientPermissions("File deleted: \(url.lastPathComponent)"))))
+                try await stateStore.dispatch(AppAction.setError(AppError.systemOperation(.insufficientPermissions("File deleted: \(url.lastPathComponent)"))))
             } catch {
                 logger.error("Failed to handle file deletion: \(error.localizedDescription)")
             }
@@ -257,7 +257,7 @@ public final class WallpaperCoordinator: WallpaperCoordinatorProtocol {
     // MARK: - Smart Rotation
     public func rotateToNext() async throws {
         guard let activePlaylist = stateStore.activePlaylist else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
         
         let context = RotationContext(
@@ -270,7 +270,7 @@ public final class WallpaperCoordinator: WallpaperCoordinatorProtocol {
             mode: stateStore.state.rotationSettings.playbackMode,
             context: context
         ) else {
-            throw WallpaperError.playlistOperation(.empty)
+            throw AppError.playlistOperation(.empty)
         }
         
         try await setWallpaper(nextWallpaper, on: nil)
@@ -338,7 +338,7 @@ public final class DefaultStorageService: StorageServiceProtocol, @unchecked Sen
     public func backup(key: String) async throws -> String {
         let sourceURL = documentsDirectory.appendingPathComponent("\(key).json")
         guard FileManager.default.fileExists(atPath: sourceURL.path) else {
-            throw WallpaperError.systemOperation(.insufficientPermissions("No file to backup for key: \(key)"))
+            throw AppError.systemOperation(.insufficientPermissions("No file to backup for key: \(key)"))
         }
         
         let backupId = "backup_\(key)_\(Date().timeIntervalSince1970)"
@@ -353,7 +353,7 @@ public final class DefaultStorageService: StorageServiceProtocol, @unchecked Sen
         let targetURL = documentsDirectory.appendingPathComponent("\(key).json")
         
         guard FileManager.default.fileExists(atPath: backupURL.path) else {
-            throw WallpaperError.systemOperation(.insufficientPermissions("Backup not found: \(backupId)"))
+            throw AppError.systemOperation(.insufficientPermissions("Backup not found: \(backupId)"))
         }
         
         // Remove existing file if present

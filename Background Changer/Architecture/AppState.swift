@@ -12,7 +12,7 @@ public struct AppState: Equatable, Codable, Sendable {
     public var userProfile: UserProfile
     public var currentWallpaper: WallpaperItem?
     public var isRotationActive: Bool
-    public var lastError: WallpaperError?
+    public var lastError: AppError?
     
     public init(
         wallpapers: [WallpaperItem] = [],
@@ -23,7 +23,7 @@ public struct AppState: Equatable, Codable, Sendable {
         userProfile: UserProfile = UserProfile(),
         currentWallpaper: WallpaperItem? = nil,
         isRotationActive: Bool = false,
-        lastError: WallpaperError? = nil
+        lastError: AppError? = nil
     ) {
         self.wallpapers = wallpapers
         self.playlists = playlists
@@ -119,7 +119,7 @@ public enum AppAction: Sendable {
     case setRotationActive(Bool)
     
     // Error handling
-    case setError(WallpaperError?)
+    case setError(AppError?)
     case clearError
     
     // Bulk actions
@@ -351,7 +351,7 @@ public final class AppStateStore: ObservableObject {
             }
         } catch {
             // Handle error by setting it in state
-            state.lastError = WallpaperError.systemError(error)
+            state.lastError = AppError.systemError(error)
         }
     }
     

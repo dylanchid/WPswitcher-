@@ -184,7 +184,7 @@ public final class ImageProcessor {
     // MARK: - Core Image Processing
     private func createThumbnail(from url: URL, targetSize: CGSize) throws -> NSImage {
         guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else {
-            throw WallpaperError.invalidImage(url, reason: .corruptedFile)
+            throw AppError.invalidImage(url, reason: .corruptedFile)
         }
         
         let maxPixelSize = max(targetSize.width, targetSize.height)
@@ -196,7 +196,7 @@ public final class ImageProcessor {
         ]
         
         guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
-            throw WallpaperError.invalidImage(url, reason: .corruptedFile)
+            throw AppError.invalidImage(url, reason: .corruptedFile)
         }
         
         return NSImage(cgImage: thumbnail, size: targetSize)
@@ -204,11 +204,11 @@ public final class ImageProcessor {
     
     private func extractImageMetadata(from url: URL) throws -> ProcessedMetadata {
         guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else {
-            throw WallpaperError.invalidImage(url, reason: .corruptedFile)
+            throw AppError.invalidImage(url, reason: .corruptedFile)
         }
-        
+
         guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any] else {
-            throw WallpaperError.invalidImage(url, reason: .corruptedFile)
+            throw AppError.invalidImage(url, reason: .corruptedFile)
         }
         
         // Extract basic properties
@@ -399,7 +399,7 @@ public final class ImageProcessor {
         
         // Check file exists
         guard fileManager.fileExists(atPath: url.path) else {
-            throw WallpaperError.systemOperation(.insufficientPermissions("File not found: \(url.path)"))
+            throw AppError.systemOperation(.insufficientPermissions("File not found: \(url.path)"))
         }
         
         // Check file size
@@ -407,11 +407,11 @@ public final class ImageProcessor {
         let fileSize = attributes[.size] as? Int64 ?? 0
         
         guard fileSize <= maxImageSize else {
-            throw WallpaperError.invalidImage(url, reason: .tooLarge(size: fileSize, maxSize: maxImageSize))
+            throw AppError.invalidImage(url, reason: .tooLarge(size: fileSize, maxSize: maxImageSize))
         }
-        
+
         guard fileSize > 0 else {
-            throw WallpaperError.invalidImage(url, reason: .corruptedFile)
+            throw AppError.invalidImage(url, reason: .corruptedFile)
         }
         
         // Check file type
@@ -420,7 +420,7 @@ public final class ImageProcessor {
               let utType = UTType(typeIdentifier),
               supportedTypes.contains(where: { utType.conforms(to: $0) }) else {
             let fileExtension = url.pathExtension.lowercased()
-            throw WallpaperError.invalidImage(url, reason: .unsupportedFormat(fileExtension))
+            throw AppError.invalidImage(url, reason: .unsupportedFormat(fileExtension))
         }
     }
     
@@ -457,7 +457,7 @@ public final class ImageProcessor {
         // Attempt to repair corrupted image by re-encoding
         let originalImage = NSImage(contentsOf: url)
         guard let originalImage = originalImage else {
-            throw WallpaperError.invalidImage(url, reason: .corruptedFile)
+            throw AppError.invalidImage(url, reason: .corruptedFile)
         }
         
         // Create backup
@@ -468,7 +468,7 @@ public final class ImageProcessor {
         guard let tiffData = originalImage.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
               let jpegData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.9]) else {
-            throw WallpaperError.invalidImage(url, reason: .corruptedFile)
+            throw AppError.invalidImage(url, reason: .corruptedFile)
         }
         
         try jpegData.write(to: url)

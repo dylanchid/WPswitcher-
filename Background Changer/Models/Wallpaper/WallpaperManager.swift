@@ -40,7 +40,7 @@ public class WallpaperManager: ObservableObject {
     @Published var isRotating: Bool = false
     @Published var rotationInterval: RotationInterval = .thirtyMinutes
     @Published var customInterval: TimeInterval = 0
-    @Published var currentError: WallpaperTypes.WallpaperError?
+    @Published var currentError: AppError?
     @Published var userProfile: UserProfile = UserProfile()
     @Published var currentVersionIndex: Int = -1
     @Published var versionHistory: [PlaylistVersion] = []
@@ -130,7 +130,7 @@ public class WallpaperManager: ObservableObject {
             try await stateStore.loadState()
             await refreshFromState()
         } catch {
-            currentError = WallpaperError.systemError(error)
+            currentError = AppError.systemError(error)
         }
     }
     
@@ -163,7 +163,7 @@ public class WallpaperManager: ObservableObject {
             stateStore.setCurrentWallpaper(wallpaperItem)
             currentError = nil
         } catch {
-            currentError = WallpaperError.systemError(error)
+            currentError = AppError.systemError(error)
         }
     }
 
@@ -174,7 +174,7 @@ public class WallpaperManager: ObservableObject {
                 try await dependencies.wallpaperCoordinator.updateDisplayMode(mode)
                 stateStore.dispatch(.updateDisplayMode(mode))
             } catch {
-                currentError = WallpaperError.systemError(error)
+                currentError = AppError.systemError(error)
             }
         }
     }
@@ -228,7 +228,7 @@ public class WallpaperManager: ObservableObject {
                     }
                 }
             } catch {
-                currentError = WallpaperError.systemError(error)
+                currentError = AppError.systemError(error)
             }
         }
     }
@@ -242,7 +242,7 @@ public class WallpaperManager: ObservableObject {
                 timer?.invalidate()
                 timer = nil
             } catch {
-                currentError = WallpaperError.systemError(error)
+                currentError = AppError.systemError(error)
             }
         }
     }
@@ -310,7 +310,7 @@ public class WallpaperManager: ObservableObject {
                     stateStore.addWallpaper(wallpaper)
                 }
             } catch {
-                currentError = WallpaperError.systemError(error)
+                currentError = AppError.systemError(error)
             }
         }
     }
@@ -326,7 +326,7 @@ public class WallpaperManager: ObservableObject {
             // Update global wallpapers list for legacy compatibility
             globalWallpapers.append(contentsOf: urls)
         } catch {
-            currentError = WallpaperError.systemError(error)
+            currentError = AppError.systemError(error)
         }
     }
 
@@ -355,7 +355,7 @@ public class WallpaperManager: ObservableObject {
             let playlist = try await dependencies.wallpaperCoordinator.createPlaylist(name: name)
             stateStore.addPlaylist(playlist)
         } catch {
-            currentError = WallpaperError.systemError(error)
+            currentError = AppError.systemError(error)
             throw error
         }
     }
@@ -367,7 +367,7 @@ public class WallpaperManager: ObservableObject {
             try await dependencies.wallpaperCoordinator.deletePlaylist(playlist)
             stateStore.dispatch(.removePlaylist(id))
         } catch {
-            currentError = .playlistError(error.localizedDescription)
+            currentError = AppError.playlistError(error.localizedDescription)
         }
     }
 
@@ -392,7 +392,7 @@ public class WallpaperManager: ObservableObject {
                 stateStore.dispatch(.addWallpaperToPlaylist(wallpaperId: item.id, playlistId: playlistId))
             }
         } catch {
-            currentError = .playlistError(error.localizedDescription)
+            currentError = AppError.playlistError(error.localizedDescription)
         }
     }
 
@@ -407,7 +407,7 @@ public class WallpaperManager: ObservableObject {
                 }
             }
         } catch {
-            currentError = .playlistError(error.localizedDescription)
+            currentError = AppError.playlistError(error.localizedDescription)
         }
     }
 
@@ -423,7 +423,7 @@ public class WallpaperManager: ObservableObject {
             try updatedPlaylist.moveWallpaper(from: sourceIndexSet, to: destinationIndex)
             self.stateStore.dispatch(.updatePlaylist(updatedPlaylist))
         } catch {
-            self.currentError = .playlistError(error.localizedDescription)
+            self.currentError = AppError.playlistError(error.localizedDescription)
         }
     }
 
@@ -542,8 +542,8 @@ extension WallpaperManager {
             let storageService = DefaultStorageService()
             let cacheService = DefaultCacheService()
             
-            // Create mock services for rotation (replace with real implementations)
-            let rotationService = MockWallpaperRotationService()
+            // Create rotation service with real implementation
+            let rotationService = DefaultWallpaperRotationService()
             let wallpaperService = WallpaperService(
                 workspace: NSWorkspace.shared,
                 fileManager: .default,
@@ -553,8 +553,13 @@ extension WallpaperManager {
             let playlistService = PlaylistService()
             
             // Create coordinator
+            // Note: WallpaperService conforms to WallpaperTypes.WallpaperServiceProtocol
+            guard let wallpaperServiceProtocol = wallpaperService as? WallpaperTypes.WallpaperServiceProtocol else {
+                fatalError("WallpaperService must conform to WallpaperTypes.WallpaperServiceProtocol")
+            }
+
             let coordinator = WallpaperCoordinator(
-                wallpaperService: wallpaperService as! WallpaperTypes.WallpaperServiceProtocol,
+                wallpaperService: wallpaperServiceProtocol,
                 playlistService: playlistService,
                 rotationService: rotationService,
                 cacheService: cacheService
@@ -582,18 +587,171 @@ extension WallpaperManager {
     }
 }
 
-// Mock rotation service to satisfy the constructor
-private class MockWallpaperRotationService: Wallpaper.WallpaperRotationServiceProtocol {
-    var isRotating: Bool = false
-    var rotationInterval: TimeInterval = 3600
+// MARK: - Default Rotation Service Implementation
+@MainActor
+private class DefaultWallpaperRotationService: Wallpaper.WallpaperRotationServiceProtocol {
+    // MARK: - Properties
+    private(set) var isRotating: Bool = false
+    private(set) var rotationInterval: TimeInterval = 3600
     var isRotationEnabled: Bool = false
-    
-    func startRotation(interval: TimeInterval) async {}
-    func stopRotation() async {}
-    func rotateToNext() async throws {}
-    func rotateToPrevious() async throws {}
-    func start() async {}
-    func stop() {}
-    func setRotationInterval(_ interval: TimeInterval) async {}
-    func getNextWallpaper() async throws -> WallpaperTypes.WallpaperItem? { nil }
+
+    // Private state
+    private var timer: Timer?
+    private var playlist: WallpaperTypes.Playlist?
+    private var currentIndex: Int = 0
+    private var shuffledIndices: [Int] = []
+    private var playbackMode: WallpaperTypes.PlaybackMode = .sequential
+    private weak var wallpaperManager: WallpaperManager?
+
+    // Callback for when rotation needs to trigger a wallpaper change
+    var onRotationTick: (() async -> Void)?
+
+    // MARK: - Initialization
+    init() {}
+
+    // MARK: - Configuration
+    func configure(playlist: WallpaperTypes.Playlist, mode: WallpaperTypes.PlaybackMode) {
+        self.playlist = playlist
+        self.playbackMode = mode
+        self.currentIndex = 0
+
+        if mode == .shuffle && !playlist.wallpapers.isEmpty {
+            shuffledIndices = Array(0..<playlist.wallpapers.count).shuffled()
+        }
+    }
+
+    // MARK: - Rotation Control
+    func startRotation(interval: TimeInterval) async {
+        guard !isRotating else { return }
+
+        self.rotationInterval = interval
+        isRotating = true
+        isRotationEnabled = true
+
+        // Create timer on main run loop
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            Task { @MainActor in
+                await self.onRotationTick?()
+            }
+        }
+
+        // Add to common run loop mode for better reliability
+        if let timer = timer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+
+    func stopRotation() async {
+        timer?.invalidate()
+        timer = nil
+        isRotating = false
+        isRotationEnabled = false
+    }
+
+    func rotateToNext() async throws {
+        guard let playlist = playlist, !playlist.wallpapers.isEmpty else {
+            throw WallpaperTypes.WallpaperError.playlistNotFound
+        }
+
+        switch playbackMode {
+        case .sequential:
+            currentIndex = (currentIndex + 1) % playlist.wallpapers.count
+        case .random:
+            currentIndex = Int.random(in: 0..<playlist.wallpapers.count)
+        case .shuffle:
+            if shuffledIndices.isEmpty {
+                shuffledIndices = Array(0..<playlist.wallpapers.count).shuffled()
+            }
+            if let currentShuffleIndex = shuffledIndices.firstIndex(of: currentIndex) {
+                let nextShuffleIndex = (currentShuffleIndex + 1) % shuffledIndices.count
+                currentIndex = shuffledIndices[nextShuffleIndex]
+
+                // Reshuffle when we complete a cycle
+                if nextShuffleIndex == 0 {
+                    shuffledIndices = Array(0..<playlist.wallpapers.count).shuffled()
+                }
+            } else {
+                currentIndex = shuffledIndices.first ?? 0
+            }
+        }
+    }
+
+    func rotateToPrevious() async throws {
+        guard let playlist = playlist, !playlist.wallpapers.isEmpty else {
+            throw WallpaperTypes.WallpaperError.playlistNotFound
+        }
+
+        switch playbackMode {
+        case .sequential:
+            currentIndex = (currentIndex - 1 + playlist.wallpapers.count) % playlist.wallpapers.count
+        case .random:
+            // For random mode, just pick another random one
+            currentIndex = Int.random(in: 0..<playlist.wallpapers.count)
+        case .shuffle:
+            if shuffledIndices.isEmpty {
+                shuffledIndices = Array(0..<playlist.wallpapers.count).shuffled()
+            }
+            if let currentShuffleIndex = shuffledIndices.firstIndex(of: currentIndex) {
+                let prevShuffleIndex = (currentShuffleIndex - 1 + shuffledIndices.count) % shuffledIndices.count
+                currentIndex = shuffledIndices[prevShuffleIndex]
+            } else {
+                currentIndex = shuffledIndices.last ?? 0
+            }
+        }
+    }
+
+    func start() async {
+        await startRotation(interval: rotationInterval)
+    }
+
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+        isRotating = false
+    }
+
+    func setRotationInterval(_ interval: TimeInterval) async {
+        self.rotationInterval = interval
+
+        // If currently rotating, restart with new interval
+        if isRotating {
+            await stopRotation()
+            await startRotation(interval: interval)
+        }
+    }
+
+    func getNextWallpaper() async throws -> WallpaperTypes.WallpaperItem? {
+        guard let playlist = playlist, !playlist.wallpapers.isEmpty else {
+            return nil
+        }
+
+        // Calculate next index without changing state
+        let nextIndex: Int
+        switch playbackMode {
+        case .sequential:
+            nextIndex = (currentIndex + 1) % playlist.wallpapers.count
+        case .random:
+            nextIndex = Int.random(in: 0..<playlist.wallpapers.count)
+        case .shuffle:
+            if shuffledIndices.isEmpty {
+                return playlist.wallpapers.first
+            }
+            if let currentShuffleIndex = shuffledIndices.firstIndex(of: currentIndex) {
+                let nextShuffleIndex = (currentShuffleIndex + 1) % shuffledIndices.count
+                nextIndex = shuffledIndices[nextShuffleIndex]
+            } else {
+                nextIndex = shuffledIndices.first ?? 0
+            }
+        }
+
+        return playlist.wallpapers[nextIndex]
+    }
+
+    func getCurrentWallpaper() -> WallpaperTypes.WallpaperItem? {
+        guard let playlist = playlist, currentIndex < playlist.wallpapers.count else {
+            return nil
+        }
+        return playlist.wallpapers[currentIndex]
+    }
 }

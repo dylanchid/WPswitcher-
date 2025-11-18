@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 import Wallpaper
+import WallpaperTypes
 
 @MainActor
 final class PlaylistCoordinator: BaseCoordinator {
@@ -27,11 +28,13 @@ final class PlaylistCoordinator: BaseCoordinator {
     }
 
     func startCreateFlow() {
-    // TODO: Present create playlist flow via coordinator-managed UI (window/screen)
+        // Set the active flow to trigger the sheet presentation
+        router.activeFlow = .create
     }
 
     func startEditFlow(playlist: Wallpaper.Playlist) {
-    // TODO: Present edit playlist flow via coordinator-managed UI (window/screen)
+        // Set the active flow to trigger the sheet presentation
+        router.activeFlow = .rename(playlist)
     }
 
     // Centralized delete confirmation and action

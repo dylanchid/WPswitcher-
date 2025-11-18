@@ -60,8 +60,8 @@ public enum AppAction: Equatable, Sendable {
 public func appReducer(state: inout AppState, action: AppAction) throws {
     switch action {
     case .addWallpaper(let item):
-        guard item.isValid else { 
-            throw WallpaperError.stateManagement(.invalidWallpaper) 
+        guard item.isValid else {
+            throw AppError.stateManagement(.invalidWallpaper)
         }
         if !state.wallpapers.contains(where: { $0.id == item.id }) {
             state.wallpapers.append(item)
@@ -80,7 +80,7 @@ public func appReducer(state: inout AppState, action: AppAction) throws {
         
     case .updateWallpaper(let item):
         guard let index = state.wallpapers.firstIndex(where: { $0.id == item.id }) else {
-            throw WallpaperError.stateManagement(.invalidWallpaper)
+            throw AppError.stateManagement(.invalidWallpaper)
         }
         state.wallpapers[index] = item
         
@@ -105,10 +105,10 @@ public func appReducer(state: inout AppState, action: AppAction) throws {
         
     case .createPlaylist(let name, let id):
         guard !name.isEmpty else {
-            throw WallpaperError.playlistOperation(.invalidName(name))
+            throw AppError.playlistOperation(.invalidName(name))
         }
         guard !state.playlists.contains(where: { $0.name == name }) else {
-            throw WallpaperError.playlistOperation(.invalidName("Playlist name already exists"))
+            throw AppError.playlistOperation(.invalidName("Playlist name already exists"))
         }
         
         let playlist = Playlist(id: id, name: name)
@@ -116,7 +116,7 @@ public func appReducer(state: inout AppState, action: AppAction) throws {
         
     case .deletePlaylist(let id):
         guard let index = state.playlists.firstIndex(where: { $0.id == id }) else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
         state.playlists.remove(at: index)
         
@@ -127,43 +127,43 @@ public func appReducer(state: inout AppState, action: AppAction) throws {
         
     case .updatePlaylist(let playlist):
         guard let index = state.playlists.firstIndex(where: { $0.id == playlist.id }) else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
         state.playlists[index] = playlist
         
     case .setActivePlaylist(let id):
         if let id = id {
             guard state.playlists.contains(where: { $0.id == id }) else {
-                throw WallpaperError.stateManagement(.playlistNotFound)
+                throw AppError.stateManagement(.playlistNotFound)
             }
         }
         state.activePlaylistId = id
         
     case .addWallpaperToPlaylist(let wallpaperId, let playlistId):
         guard let wallpaper = state.wallpapers.first(where: { $0.id == wallpaperId }) else {
-            throw WallpaperError.stateManagement(.invalidWallpaper)
+            throw AppError.stateManagement(.invalidWallpaper)
         }
         guard let playlistIndex = state.playlists.firstIndex(where: { $0.id == playlistId }) else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
-        
+
         // Check for duplicates
         if state.playlists[playlistIndex].wallpapers.contains(where: { $0.id == wallpaperId }) {
-            throw WallpaperError.playlistOperation(.duplicateWallpaper(wallpaperId))
+            throw AppError.playlistOperation(.duplicateWallpaper(wallpaperId))
         }
         
         state.playlists[playlistIndex].wallpapers.append(wallpaper)
         
     case .removeWallpaperFromPlaylist(let wallpaperId, let playlistId):
         guard let playlistIndex = state.playlists.firstIndex(where: { $0.id == playlistId }) else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
         
         state.playlists[playlistIndex].wallpapers.removeAll { $0.id == wallpaperId }
         
     case .reorderPlaylistWallpapers(let playlistId, let from, let to):
         guard let playlistIndex = state.playlists.firstIndex(where: { $0.id == playlistId }) else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
         
         var wallpapers = state.playlists[playlistIndex].wallpapers
@@ -177,7 +177,7 @@ public func appReducer(state: inout AppState, action: AppAction) throws {
         
     case .startRotation(let playlistId):
         guard state.playlists.contains(where: { $0.id == playlistId }) else {
-            throw WallpaperError.stateManagement(.playlistNotFound)
+            throw AppError.stateManagement(.playlistNotFound)
         }
         state.activePlaylistId = playlistId
         state.isRotationActive = true
@@ -328,7 +328,7 @@ public final class ValidationMiddleware: Middleware {
             
         case .createPlaylist(let name, _):
             guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw WallpaperError.playlistOperation(.invalidName("Empty name"))
+                throw AppError.playlistOperation(.invalidName("Empty name"))
             }
             
         case .updatePlaylist(let playlist):
