@@ -78,6 +78,11 @@ public class WallpaperManager: ObservableObject {
     private var appearanceObserver: NSObjectProtocol?
     private var shuffledIndices: [Int] = []
     private var currentShuffleIndex: Int = 0
+
+    // MARK: - Wallpaper History
+    private var wallpaperHistory: [WallpaperTypes.WallpaperItem] = []
+    private var historyIndex: Int = -1
+    private let maxHistorySize = 50
     
     private var isUsingGlobalWallpapers: Bool {
         activePlaylistId == nil
@@ -260,22 +265,90 @@ public class WallpaperManager: ObservableObject {
         }
     }
     
-    /// Manually rotate to previous wallpaper  
+    /// Manually rotate to previous wallpaper
     public func rotateToPrevious() throws {
-        // Implementation for rotating to previous wallpaper
-        // This would require keeping track of wallpaper history
+        guard historyIndex > 0 else {
+            throw WallpaperTypes.WallpaperError.rotationError("No previous wallpaper in history")
+        }
+
+        historyIndex -= 1
+        let previousWallpaper = wallpaperHistory[historyIndex]
+
+        Task {
+            await setWallpaperWithoutHistory(from: previousWallpaper.url)
+        }
     }
-    
+
     /// Undo last wallpaper change
     public func undo() throws {
-        // Implementation for undo functionality
-        // This would require keeping track of wallpaper history
+        try rotateToPrevious()
     }
-    
+
     /// Redo last undone wallpaper change
     public func redo() throws {
-        // Implementation for redo functionality
-        // This would require keeping track of wallpaper history
+        guard historyIndex < wallpaperHistory.count - 1 else {
+            throw WallpaperTypes.WallpaperError.rotationError("No wallpaper to redo")
+        }
+
+        historyIndex += 1
+        let nextWallpaper = wallpaperHistory[historyIndex]
+
+        Task {
+            await setWallpaperWithoutHistory(from: nextWallpaper.url)
+        }
+    }
+
+    /// Check if undo is available
+    public var canUndo: Bool {
+        historyIndex > 0
+    }
+
+    /// Check if redo is available
+    public var canRedo: Bool {
+        historyIndex < wallpaperHistory.count - 1
+    }
+
+    /// Get the wallpaper history
+    public var history: [WallpaperTypes.WallpaperItem] {
+        wallpaperHistory
+    }
+
+    /// Clear wallpaper history
+    public func clearHistory() {
+        wallpaperHistory.removeAll()
+        historyIndex = -1
+    }
+
+    // MARK: - Private History Methods
+
+    /// Add wallpaper to history
+    private func addToHistory(_ wallpaper: WallpaperTypes.WallpaperItem) {
+        // If we're not at the end of history, remove future entries
+        if historyIndex < wallpaperHistory.count - 1 {
+            wallpaperHistory.removeSubrange((historyIndex + 1)...)
+        }
+
+        // Add to history
+        wallpaperHistory.append(wallpaper)
+        historyIndex = wallpaperHistory.count - 1
+
+        // Limit history size
+        if wallpaperHistory.count > maxHistorySize {
+            wallpaperHistory.removeFirst()
+            historyIndex = wallpaperHistory.count - 1
+        }
+    }
+
+    /// Set wallpaper without adding to history (used for undo/redo)
+    private func setWallpaperWithoutHistory(from url: URL) async {
+        do {
+            let wallpaperItem = WallpaperItem(url: url, name: url.deletingPathExtension().lastPathComponent)
+            try await dependencies.wallpaperCoordinator.setWallpaper(wallpaperItem, on: nil)
+            stateStore.setCurrentWallpaper(wallpaperItem)
+            currentError = nil
+        } catch {
+            currentError = AppError.systemError(error)
+        }
     }
 
     // MARK: - Shims for legacy view calls
@@ -440,13 +513,72 @@ public class WallpaperManager: ObservableObject {
     }
 
     public func restoreFromBackup(id: UUID) throws {
-        // TODO: Implement backup restoration functionality
-        throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup restoration not yet implemented"]))
+        // Find the backup in version history
+        guard let backupIndex = versionHistory.firstIndex(where: { $0.id == id }) else {
+            throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup not found"]))
+        }
+
+        let backup = versionHistory[backupIndex]
+
+        // Restore playlists from backup
+        Task {
+            // Restore wallpapers state
+            stateStore.dispatch(.replaceAllWallpapers(backup.wallpapers))
+
+            // Restore playlists state
+            stateStore.dispatch(.replaceAllPlaylists(backup.playlists))
+
+            // Set the current version index
+            currentVersionIndex = backupIndex
+        }
     }
 
     public func deleteBackup(id: UUID) throws {
-        // TODO: Implement backup deletion functionality
-        throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup deletion not yet implemented"]))
+        // Find and remove the backup from version history
+        guard let backupIndex = versionHistory.firstIndex(where: { $0.id == id }) else {
+            throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup not found"]))
+        }
+
+        // Don't allow deletion of the current version
+        if backupIndex == currentVersionIndex {
+            throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "Cannot delete the current active backup"]))
+        }
+
+        versionHistory.remove(at: backupIndex)
+
+        // Adjust current version index if needed
+        if backupIndex < currentVersionIndex {
+            currentVersionIndex -= 1
+        }
+    }
+
+    /// Create a new backup of current state
+    public func createBackup(name: String? = nil) -> UUID {
+        let backup = PlaylistVersion(
+            id: UUID(),
+            name: name ?? "Backup \(Date().formatted(date: .abbreviated, time: .shortened))",
+            date: Date(),
+            wallpapers: stateStore.state.wallpapers,
+            playlists: stateStore.state.playlists
+        )
+
+        versionHistory.append(backup)
+        currentVersionIndex = versionHistory.count - 1
+
+        return backup.id
+    }
+
+    /// List all available backups
+    public var backups: [PlaylistVersion] {
+        versionHistory
+    }
+
+    /// Get the current backup
+    public var currentBackup: PlaylistVersion? {
+        guard currentVersionIndex >= 0 && currentVersionIndex < versionHistory.count else {
+            return nil
+        }
+        return versionHistory[currentVersionIndex]
     }
 
     // MARK: - Private Methods (Legacy Support)

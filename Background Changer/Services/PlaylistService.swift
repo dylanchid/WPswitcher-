@@ -2,7 +2,6 @@ import Foundation
 import Combine
 import Wallpaper
 import WallpaperTypes
-import WallpaperTypes
 
 @MainActor
 final class PlaylistService: PlaylistServiceProtocol {
