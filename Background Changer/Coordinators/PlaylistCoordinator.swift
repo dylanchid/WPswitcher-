@@ -27,11 +27,13 @@ final class PlaylistCoordinator: BaseCoordinator {
     }
 
     func startCreateFlow() {
-    // TODO: Present create playlist flow via coordinator-managed UI (window/screen)
+        // Present create playlist flow via coordinator-managed UI
+        router.activeFlow = .create
     }
 
     func startEditFlow(playlist: Wallpaper.Playlist) {
-    // TODO: Present edit playlist flow via coordinator-managed UI (window/screen)
+        // Present edit playlist flow via coordinator-managed UI
+        router.activeFlow = .rename(playlist)
     }
 
     // Centralized delete confirmation and action

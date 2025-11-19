@@ -15,6 +15,24 @@ protocol UserSettingsServiceProtocol {
     func importSettings(_ data: Data) async throws
 }
 
+/// Struct representing backup settings
+struct BackupSettings: Codable {
+    var autoBackup: Bool
+    var backupInterval: TimeInterval
+    var backupLocation: String
+    var maxBackups: Int
+
+    init(autoBackup: Bool = false,
+         backupInterval: TimeInterval = 604800, // Weekly
+         backupLocation: String = "",
+         maxBackups: Int = 5) {
+        self.autoBackup = autoBackup
+        self.backupInterval = backupInterval
+        self.backupLocation = backupLocation
+        self.maxBackups = maxBackups
+    }
+}
+
 /// Struct representing user settings
 struct UserSettings: Codable {
     // App Behavior
@@ -22,7 +40,7 @@ struct UserSettings: Codable {
     var showInDock: Bool
     var showInMenuBar: Bool
     var notificationsEnabled: Bool
-    
+
     // Wallpaper Settings
     var defaultDisplayMode: DisplayMode
     var defaultRotationInterval: TimeInterval
@@ -30,14 +48,17 @@ struct UserSettings: Codable {
     var changeOnWake: Bool
     var maxCacheSize: Int64
     var maxRecentWallpapers: Int
-    
+
     // User Preferences
     var favoriteWallpapers: Set<UUID>
     var recentlyUsedWallpapers: [UUID]
     var customShortcuts: [KeyboardShortcut]
     var defaultFolders: [URL]
     var excludedFolders: [URL]
-    
+
+    // Backup Settings
+    var backup: BackupSettings
+
     init(startAtLogin: Bool = false,
          showInDock: Bool = true,
          showInMenuBar: Bool = true,
@@ -52,7 +73,8 @@ struct UserSettings: Codable {
          recentlyUsedWallpapers: [UUID] = [],
          customShortcuts: [KeyboardShortcut] = [],
          defaultFolders: [URL] = [],
-         excludedFolders: [URL] = []) {
+         excludedFolders: [URL] = [],
+         backup: BackupSettings = BackupSettings()) {
         self.startAtLogin = startAtLogin
         self.showInDock = showInDock
         self.showInMenuBar = showInMenuBar
@@ -68,6 +90,7 @@ struct UserSettings: Codable {
         self.customShortcuts = customShortcuts
         self.defaultFolders = defaultFolders
         self.excludedFolders = excludedFolders
+        self.backup = backup
     }
 }
 

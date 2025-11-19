@@ -2,7 +2,13 @@ import Foundation
 import Combine
 import Wallpaper
 import WallpaperTypes
-import WallpaperTypes
+
+/// Protocol for resolving wallpaper items from IDs
+@MainActor
+protocol WallpaperItemResolver {
+    func getWallpaperItem(for id: UUID) -> WallpaperTypes.WallpaperItem?
+    func getAllWallpapers() -> [WallpaperTypes.WallpaperItem]
+}
 
 @MainActor
 final class PlaylistService: PlaylistServiceProtocol {
@@ -17,25 +23,34 @@ final class PlaylistService: PlaylistServiceProtocol {
             }
         }
     }
-    
+
     private var _currentPlaylist: Wallpaper.Playlist?
-    
+
     // MARK: - Published Properties
     @Published private(set) var playlists: [Wallpaper.Playlist] = []
     @Published private(set) var activePlaylistId: UUID?
     @Published private(set) var isRotating: Bool = false
     @Published private(set) var rotationInterval: TimeInterval = 3600 // Default 1 hour
-    
+
     // MARK: - Private Properties
     private let userDefaults: UserDefaults
     private let maxPlaylists = 20
     private let playlistsKey = "savedPlaylists"
     private let activePlaylistKey = "activePlaylist"
-    
+
+    // Wallpaper resolver for looking up wallpaper items by ID
+    private var wallpaperResolver: WallpaperItemResolver?
+
     // MARK: - Initialization
-    init(userDefaults: UserDefaults = .standard) {
+    init(userDefaults: UserDefaults = .standard, wallpaperResolver: WallpaperItemResolver? = nil) {
         self.userDefaults = userDefaults
+        self.wallpaperResolver = wallpaperResolver
         loadSavedData()
+    }
+
+    // MARK: - Configuration
+    func setWallpaperResolver(_ resolver: WallpaperItemResolver) {
+        self.wallpaperResolver = resolver
     }
     
     // MARK: - PlaylistServiceProtocol Implementation
@@ -126,23 +141,28 @@ final class PlaylistService: PlaylistServiceProtocol {
         guard let index = playlists.firstIndex(where: { $0.id == playlistId }) else {
             throw WallpaperError.playlistError("Playlist not found")
         }
-        
+
         var playlist = playlists[index]
         let existingIds = Set(playlist.wallpapers.map { $0.id })
         let newIds = wallpaperIds.subtracting(existingIds)
-        
-        // TODO: This needs access to a wallpaper service or manager to get wallpaper items from IDs
-        // For now, creating dummy items. This should be replaced with actual logic.
-        let newWallpapers = newIds.map { 
-            WallpaperTypes.WallpaperItem(
-                id: $0, 
-                url: URL(fileURLWithPath: "/dev/null"), 
-                name: "dummy"
-            ) 
+
+        // Resolve wallpaper items from IDs using the resolver
+        var newWallpapers: [WallpaperTypes.WallpaperItem] = []
+
+        if let resolver = wallpaperResolver {
+            for id in newIds {
+                if let wallpaper = resolver.getWallpaperItem(for: id) {
+                    newWallpapers.append(wallpaper)
+                }
+            }
+        } else {
+            // Fallback: If no resolver is available, we cannot resolve the wallpapers
+            // This should be configured during app initialization
+            throw WallpaperError.playlistError("Wallpaper resolver not configured")
         }
-        
+
         playlist.wallpapers.append(contentsOf: newWallpapers)
-        
+
         playlists[index] = playlist
         savePlaylists()
     }

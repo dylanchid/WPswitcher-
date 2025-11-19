@@ -45,6 +45,11 @@ public class WallpaperManager: ObservableObject {
     @Published var currentVersionIndex: Int = -1
     @Published var versionHistory: [PlaylistVersion] = []
     @Published var wallpapers: [WallpaperTypes.WallpaperItem] = []
+    @Published var userSettings: UserSettings = UserSettings()
+
+    // Backup storage
+    private var backups: [Backup] = []
+    private let backupsKey = "wallpaperManagerBackups"
     
     // Convenience properties derived from state
     public var displayMode: WallpaperTypes.DisplayMode {
@@ -128,6 +133,7 @@ public class WallpaperManager: ObservableObject {
     private func loadInitialState() async {
         do {
             try await stateStore.loadState()
+            loadBackups()
             await refreshFromState()
         } catch {
             currentError = WallpaperError.systemError(error)
@@ -440,13 +446,73 @@ public class WallpaperManager: ObservableObject {
     }
 
     public func restoreFromBackup(id: UUID) throws {
-        // TODO: Implement backup restoration functionality
-        throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup restoration not yet implemented"]))
+        guard let backup = backups.first(where: { $0.id == id }) else {
+            throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup not found"]))
+        }
+
+        // Restore playlists
+        stateStore.dispatch(.replaceAllPlaylists(backup.playlists))
+
+        // Restore wallpapers
+        stateStore.dispatch(.replaceAllWallpapers(backup.wallpapers))
+
+        // Restore user profile
+        stateStore.dispatch(.updateUserProfile(backup.userProfile))
+
+        // Restore user settings
+        userSettings = backup.userSettings
+
+        // Refresh state
+        Task {
+            await refreshFromState()
+        }
     }
 
     public func deleteBackup(id: UUID) throws {
-        // TODO: Implement backup deletion functionality
-        throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup deletion not yet implemented"]))
+        guard let index = backups.firstIndex(where: { $0.id == id }) else {
+            throw WallpaperTypes.WallpaperError.systemError(NSError(domain: "WallpaperManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Backup not found"]))
+        }
+
+        backups.remove(at: index)
+        saveBackups()
+    }
+
+    public func createBackup() throws {
+        let backup = Backup(
+            id: UUID(),
+            timestamp: Date(),
+            playlists: stateStore.state.playlists,
+            wallpapers: stateStore.state.wallpapers,
+            userSettings: userSettings,
+            userProfile: stateStore.state.userProfile
+        )
+
+        backups.append(backup)
+
+        // Enforce max backups limit
+        let maxBackups = userSettings.backup.maxBackups
+        if backups.count > maxBackups {
+            backups.removeFirst(backups.count - maxBackups)
+        }
+
+        saveBackups()
+    }
+
+    public func getAvailableBackups() -> [Backup] {
+        return backups.sorted { $0.timestamp > $1.timestamp }
+    }
+
+    private func saveBackups() {
+        if let data = try? JSONEncoder().encode(backups) {
+            UserDefaults.standard.set(data, forKey: backupsKey)
+        }
+    }
+
+    private func loadBackups() {
+        if let data = UserDefaults.standard.data(forKey: backupsKey),
+           let decoded = try? JSONDecoder().decode([Backup].self, from: data) {
+            backups = decoded
+        }
     }
 
     // MARK: - Private Methods (Legacy Support)
