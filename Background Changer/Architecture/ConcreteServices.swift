@@ -291,9 +291,11 @@ public final class DefaultStorageService: StorageServiceProtocol, @unchecked Sen
     private let decoder = JSONDecoder()
     
     public init() throws {
-        documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("WallpaperManager")
-        
+        guard let baseDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw WallpaperError.systemOperation(.insufficientPermissions("Unable to access documents directory"))
+        }
+        documentsDirectory = baseDirectory.appendingPathComponent("WallpaperManager")
+
         // Create directory if needed
         try FileManager.default.createDirectory(
             at: documentsDirectory,

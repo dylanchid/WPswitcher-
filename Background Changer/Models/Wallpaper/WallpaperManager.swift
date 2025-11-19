@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import SwiftUI
+import UniformTypeIdentifiers
 import Wallpaper
 import WallpaperTypes
 
@@ -148,6 +149,11 @@ public class WallpaperManager: ObservableObject {
     }
 
     deinit {
+        // Clean up timer to prevent memory leaks
+        timer?.invalidate()
+        timer = nil
+
+        // Clean up appearance observer
         if let observer = appearanceObserver {
             NotificationCenter.default.removeObserver(observer)
         }
@@ -260,22 +266,31 @@ public class WallpaperManager: ObservableObject {
         }
     }
     
-    /// Manually rotate to previous wallpaper  
+    /// Manually rotate to previous wallpaper
     public func rotateToPrevious() throws {
-        // Implementation for rotating to previous wallpaper
-        // This would require keeping track of wallpaper history
+        // TODO: Implement wallpaper history tracking for previous wallpaper navigation
+        throw WallpaperTypes.WallpaperError.systemError(
+            NSError(domain: "WallpaperManager", code: -1,
+                   userInfo: [NSLocalizedDescriptionKey: "Previous wallpaper navigation not yet implemented"])
+        )
     }
-    
+
     /// Undo last wallpaper change
     public func undo() throws {
-        // Implementation for undo functionality
-        // This would require keeping track of wallpaper history
+        // TODO: Implement undo/redo stack for wallpaper changes
+        throw WallpaperTypes.WallpaperError.systemError(
+            NSError(domain: "WallpaperManager", code: -1,
+                   userInfo: [NSLocalizedDescriptionKey: "Undo functionality not yet implemented"])
+        )
     }
-    
+
     /// Redo last undone wallpaper change
     public func redo() throws {
-        // Implementation for redo functionality
-        // This would require keeping track of wallpaper history
+        // TODO: Implement undo/redo stack for wallpaper changes
+        throw WallpaperTypes.WallpaperError.systemError(
+            NSError(domain: "WallpaperManager", code: -1,
+                   userInfo: [NSLocalizedDescriptionKey: "Redo functionality not yet implemented"])
+        )
     }
 
     // MARK: - Shims for legacy view calls
@@ -318,13 +333,32 @@ public class WallpaperManager: ObservableObject {
     /// Adds wallpapers to global list (legacy support)
     public func addGlobalWallpapers(_ urls: [URL]) async {
         do {
-            let newWallpapers = try await dependencies.wallpaperCoordinator.addWallpapers(urls)
+            // Filter and validate URLs before adding
+            let validURLs = urls.filter { url in
+                // Check file exists and is readable
+                guard FileManager.default.isReadableFile(atPath: url.path) else {
+                    return false
+                }
+                // Validate it's actually an image by checking UTType
+                if let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey]),
+                   let contentType = resourceValues.contentType {
+                    return contentType.conforms(to: .image)
+                }
+                return false
+            }
+
+            guard !validURLs.isEmpty else {
+                currentError = WallpaperError.invalidInput("No valid image files were selected")
+                return
+            }
+
+            let newWallpapers = try await dependencies.wallpaperCoordinator.addWallpapers(validURLs)
             for wallpaper in newWallpapers {
                 stateStore.addWallpaper(wallpaper)
             }
-            
+
             // Update global wallpapers list for legacy compatibility
-            globalWallpapers.append(contentsOf: urls)
+            globalWallpapers.append(contentsOf: validURLs)
         } catch {
             currentError = WallpaperError.systemError(error)
         }
@@ -553,8 +587,11 @@ extension WallpaperManager {
             let playlistService = PlaylistService()
             
             // Create coordinator
+            guard let wallpaperServiceProtocol = wallpaperService as? WallpaperTypes.WallpaperServiceProtocol else {
+                fatalError("WallpaperService does not conform to WallpaperServiceProtocol - check Wallpaper package implementation")
+            }
             let coordinator = WallpaperCoordinator(
-                wallpaperService: wallpaperService as! WallpaperTypes.WallpaperServiceProtocol,
+                wallpaperService: wallpaperServiceProtocol,
                 playlistService: playlistService,
                 rotationService: rotationService,
                 cacheService: cacheService
@@ -582,18 +619,33 @@ extension WallpaperManager {
     }
 }
 
-// Mock rotation service to satisfy the constructor
+// MARK: - Mock Rotation Service
+// TODO: Replace MockWallpaperRotationService with a real implementation
+// This mock service is a placeholder that doesn't perform actual rotation operations.
+// The WallpaperManager handles rotation via its own timer, but this mock should be
+// replaced with a proper implementation for better separation of concerns.
 private class MockWallpaperRotationService: Wallpaper.WallpaperRotationServiceProtocol {
     var isRotating: Bool = false
     var rotationInterval: TimeInterval = 3600
     var isRotationEnabled: Bool = false
-    
-    func startRotation(interval: TimeInterval) async {}
-    func stopRotation() async {}
+
+    func startRotation(interval: TimeInterval) async {
+        self.rotationInterval = interval
+        self.isRotating = true
+    }
+    func stopRotation() async {
+        self.isRotating = false
+    }
     func rotateToNext() async throws {}
     func rotateToPrevious() async throws {}
-    func start() async {}
-    func stop() {}
-    func setRotationInterval(_ interval: TimeInterval) async {}
+    func start() async {
+        self.isRotating = true
+    }
+    func stop() {
+        self.isRotating = false
+    }
+    func setRotationInterval(_ interval: TimeInterval) async {
+        self.rotationInterval = interval
+    }
     func getNextWallpaper() async throws -> WallpaperTypes.WallpaperItem? { nil }
 }
