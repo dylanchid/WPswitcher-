@@ -8,7 +8,7 @@ import Wallpaper
 @main
 struct Background_ChangerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var appState = AppState()
+    @StateObject private var windowState = WindowState()
     @StateObject private var themeManager = ThemeManager()
 
     var body: some Scene {
@@ -21,14 +21,15 @@ struct Background_ChangerApp: App {
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
         #endif
-        
+
         Settings {
             EmptyView() // Menu bar UI is handled by AppDelegate
         }
     }
 }
 
-class AppState: ObservableObject {
+/// Manages window visibility state (renamed from AppState to avoid conflict with Architecture/AppState.swift)
+class WindowState: ObservableObject {
     @Published var isMainWindowVisible = false
 }
 

@@ -98,34 +98,44 @@ public enum AppAction: Sendable {
     case removeWallpaper(UUID)
     case updateWallpaper(WallpaperItem)
     case setCurrentWallpaper(WallpaperItem?)
-    
+
     // Playlist actions
     case addPlaylist(Playlist)
     case removePlaylist(UUID)
     case updatePlaylist(Playlist)
     case setActivePlaylist(UUID?)
+    case createPlaylist(name: String, id: UUID)
+    case deletePlaylist(UUID)
     case addWallpaperToPlaylist(wallpaperId: UUID, playlistId: UUID)
     case removeWallpaperFromPlaylist(wallpaperId: UUID, playlistId: UUID)
-    
+    case reorderPlaylistWallpapers(playlistId: UUID, from: IndexSet, to: Int)
+
     // Settings actions
     case updateDisplayMode(DisplayMode)
+    case setDisplayMode(DisplayMode)
     case updateDisplaySettings(DisplaySettings)
     case updateRotationSettings(RotationSettings)
     case updateUserProfile(UserProfile)
-    
+
     // Rotation actions
     case startRotation
+    case startRotationWithPlaylist(playlistId: UUID)
     case stopRotation
     case setRotationActive(Bool)
-    
+
     // Error handling
     case setError(WallpaperError?)
     case clearError
-    
+
     // Bulk actions
     case replaceAllWallpapers([WallpaperItem])
     case replaceAllPlaylists([Playlist])
     case resetState
+
+    // History actions (for StateStore undo/redo support)
+    case undo
+    case redo
+    case clearHistory
 }
 
 // MARK: - State Errors
@@ -327,15 +337,64 @@ public func appReducer(state: inout AppState, action: AppAction) throws {
         
     case .resetState:
         state = AppState()
+
+    case .createPlaylist(let name, let id):
+        let playlist = Playlist(id: id, name: name, wallpapers: [])
+        try playlist.validate()
+
+        // Check for duplicates
+        guard !state.playlists.contains(where: { $0.id == id }) else {
+            throw StateError.invalidAction
+        }
+
+        state.playlists.append(playlist)
+
+    case .deletePlaylist(let id):
+        guard let index = state.playlists.firstIndex(where: { $0.id == id }) else {
+            throw StateError.playlistNotFound
+        }
+
+        state.playlists.remove(at: index)
+
+        // Clear active playlist if it was deleted
+        if state.activePlaylistId == id {
+            state.activePlaylistId = nil
+        }
+
+    case .reorderPlaylistWallpapers(let playlistId, let from, let to):
+        guard let playlistIndex = state.playlists.firstIndex(where: { $0.id == playlistId }) else {
+            throw StateError.playlistNotFound
+        }
+
+        state.playlists[playlistIndex].wallpapers.move(fromOffsets: from, toOffset: to)
+
+    case .setDisplayMode(let mode):
+        state.displaySettings.displayMode = mode
+
+    case .startRotationWithPlaylist(let playlistId):
+        guard state.playlists.contains(where: { $0.id == playlistId }) else {
+            throw StateError.playlistNotFound
+        }
+
+        state.activePlaylistId = playlistId
+        state.isRotationActive = true
+
+    // History actions are handled by StateStore, not the reducer
+    case .undo, .redo, .clearHistory:
+        // These are special actions handled by StateStore directly
+        break
     }
 }
 
-// MARK: - State Store
+// MARK: - State Store (Simple Implementation)
+/// A simpler state store without undo/redo or middleware support.
+/// For advanced features like undo/redo and middleware, use StateStore from StateStore.swift instead.
+/// Note: Consider migrating to StateStore for better consistency across the codebase.
 @MainActor
 public final class AppStateStore: ObservableObject {
     @Published public private(set) var state: AppState
     private let storageService: StorageServiceProtocol
-    
+
     public init(initialState: AppState = AppState(), storageService: StorageServiceProtocol) {
         self.state = initialState
         self.storageService = storageService

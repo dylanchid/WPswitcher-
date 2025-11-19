@@ -1,8 +1,10 @@
 import Foundation
 import WallpaperTypes
 import AppKit
+import OSLog
 
 // MARK: - App Actions
+// Note: This enum duplicates the one in AppState.swift. Consider using a single definition.
 public enum AppAction: Equatable, Sendable {
     // Wallpaper Actions
     case addWallpaper(WallpaperItem)
@@ -257,21 +259,26 @@ public final class PersistenceMiddleware: Middleware {
     private let storage: StorageServiceProtocol
     private let debounceDelay: TimeInterval = 1.0
     private var saveTask: Task<Void, Never>?
-    
+    private let logger = Logger(subsystem: "WallpaperManager", category: "PersistenceMiddleware")
+
     public init(storage: StorageServiceProtocol) {
         self.storage = storage
     }
-    
+
     public func process(action: AppAction, state: AppState) async throws {
         // Only persist for state-changing actions
         guard shouldPersist(action: action) else { return }
-        
+
         // Debounce saves to avoid excessive I/O
         saveTask?.cancel()
         saveTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(self?.debounceDelay ?? 1.0 * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            try? await self?.storage.save(state, key: "appState")
+            do {
+                try await Task.sleep(nanoseconds: UInt64(self?.debounceDelay ?? 1.0 * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                try await self?.storage.save(state, key: "appState")
+            } catch {
+                self?.logger.error("Failed to persist state: \(error.localizedDescription)")
+            }
         }
     }
     

@@ -573,23 +573,30 @@ extension WallpaperManager {
         // Create the manager on main actor
         return MainActor.assumeIsolated {
             // Create services
-            let storageService = DefaultStorageService()
+            guard let storageService = try? DefaultStorageService() else {
+                fatalError("Failed to create storage service - check documents directory permissions")
+            }
             let cacheService = DefaultCacheService()
-            
-            // Create mock services for rotation (replace with real implementations)
-            let rotationService = MockWallpaperRotationService()
+
+            // Create wallpaper service first (needed by rotation service)
+            // Use a temporary mock for initial creation, then create the real one
+            let tempRotationService = MockWallpaperRotationService()
             let wallpaperService = WallpaperService(
                 workspace: NSWorkspace.shared,
                 fileManager: .default,
                 userDefaults: .standard,
-                rotationService: rotationService
+                rotationService: tempRotationService
             )
-            let playlistService = PlaylistService()
-            
-            // Create coordinator
+
+            // Create the real rotation service with the wallpaper service
             guard let wallpaperServiceProtocol = wallpaperService as? WallpaperTypes.WallpaperServiceProtocol else {
                 fatalError("WallpaperService does not conform to WallpaperServiceProtocol - check Wallpaper package implementation")
             }
+            let rotationService = WallpaperRotationService(wallpaperService: wallpaperServiceProtocol)
+
+            let playlistService = PlaylistService()
+
+            // Create coordinator
             let coordinator = WallpaperCoordinator(
                 wallpaperService: wallpaperServiceProtocol,
                 playlistService: playlistService,
@@ -620,10 +627,11 @@ extension WallpaperManager {
 }
 
 // MARK: - Mock Rotation Service
-// TODO: Replace MockWallpaperRotationService with a real implementation
-// This mock service is a placeholder that doesn't perform actual rotation operations.
-// The WallpaperManager handles rotation via its own timer, but this mock should be
-// replaced with a proper implementation for better separation of concerns.
+// This mock service is used temporarily during WallpaperService initialization
+// to break the circular dependency (WallpaperService needs a rotation service,
+// but the real WallpaperRotationService needs a WallpaperServiceProtocol).
+// The actual rotation is handled by the real WallpaperRotationService created after
+// WallpaperService is initialized.
 private class MockWallpaperRotationService: Wallpaper.WallpaperRotationServiceProtocol {
     var isRotating: Bool = false
     var rotationInterval: TimeInterval = 3600

@@ -2,7 +2,7 @@ import Foundation
 import Combine
 import Wallpaper
 import WallpaperTypes
-import WallpaperTypes
+import OSLog
 
 @MainActor
 final class PlaylistService: PlaylistServiceProtocol {
@@ -31,6 +31,7 @@ final class PlaylistService: PlaylistServiceProtocol {
     private let maxPlaylists = 20
     private let playlistsKey = "savedPlaylists"
     private let activePlaylistKey = "activePlaylist"
+    private let logger = Logger(subsystem: "com.backgroundchanger", category: "PlaylistService")
     
     // MARK: - Initialization
     init(userDefaults: UserDefaults = .standard) {
@@ -198,11 +199,15 @@ final class PlaylistService: PlaylistServiceProtocol {
     // MARK: - Private Methods
     
     private func loadSavedData() {
-        if let data = userDefaults.data(forKey: playlistsKey),
-           let decoded = try? JSONDecoder().decode([Wallpaper.Playlist].self, from: data) {
-            playlists = decoded
+        if let data = userDefaults.data(forKey: playlistsKey) {
+            do {
+                playlists = try JSONDecoder().decode([Wallpaper.Playlist].self, from: data)
+            } catch {
+                logger.error("Failed to decode playlists: \(error.localizedDescription)")
+                playlists = []
+            }
         }
-        
+
         if let activeId = userDefaults.string(forKey: activePlaylistKey),
            let id = UUID(uuidString: activeId) {
             activePlaylistId = id
@@ -211,10 +216,13 @@ final class PlaylistService: PlaylistServiceProtocol {
             }
         }
     }
-    
+
     private func savePlaylists() {
-        if let encoded = try? JSONEncoder().encode(playlists) {
+        do {
+            let encoded = try JSONEncoder().encode(playlists)
             userDefaults.set(encoded, forKey: playlistsKey)
+        } catch {
+            logger.error("Failed to encode playlists: \(error.localizedDescription)")
         }
     }
 }

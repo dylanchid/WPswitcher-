@@ -1,6 +1,7 @@
 import Foundation
 import Dispatch
 import WallpaperTypes
+import OSLog
 
 @MainActor @preconcurrency
 public final class WallpaperRotationService: WallpaperRotationServiceProtocol {
@@ -10,6 +11,7 @@ public final class WallpaperRotationService: WallpaperRotationServiceProtocol {
     private var _isRotating: Bool = false
     private var _rotationInterval: TimeInterval = 300 // Default 5 minutes
     private var _isRotationEnabled: Bool = false
+    private let logger = Logger(subsystem: "com.wallpaper", category: "WallpaperRotationService")
     
     // WallpaperRotationServiceProtocol properties
     nonisolated public var isRotationEnabled: Bool {
@@ -47,7 +49,11 @@ public final class WallpaperRotationService: WallpaperRotationServiceProtocol {
         timer.schedule(deadline: .now() + interval, repeating: interval)
         timer.setEventHandler { [weak self] in
             Task { [weak self] in
-                try? await self?.rotateToNext()
+                do {
+                    try await self?.rotateToNext()
+                } catch {
+                    self?.logger.error("Rotation failed: \(error.localizedDescription)")
+                }
             }
         }
         timer.resume()

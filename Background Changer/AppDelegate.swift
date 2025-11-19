@@ -177,11 +177,19 @@ extension AppDelegate: StatusItemManagerDelegate {
     }
     
     func undo() {
-        try? wallpaperManager.undo()
+        do {
+            try wallpaperManager.undo()
+        } catch {
+            logger.warning("Undo failed: \(error.localizedDescription)")
+        }
     }
-    
+
     func redo() {
-        try? wallpaperManager.redo()
+        do {
+            try wallpaperManager.redo()
+        } catch {
+            logger.warning("Redo failed: \(error.localizedDescription)")
+        }
     }
 }
 

@@ -142,17 +142,25 @@ public final class StateStore: ObservableObject {
     private func handleSpecialAction(_ action: AppAction) async -> Bool {
         switch action {
         case .undo:
-            try? undo()
+            do {
+                try undo()
+            } catch {
+                logger.warning("Undo operation failed: \(error.localizedDescription)")
+            }
             return true
-            
+
         case .redo:
-            try? redo()
+            do {
+                try redo()
+            } catch {
+                logger.warning("Redo operation failed: \(error.localizedDescription)")
+            }
             return true
-            
+
         case .clearHistory:
             clearHistory()
             return true
-            
+
         default:
             return false
         }
@@ -266,13 +274,13 @@ extension StateStore {
         try await dispatch(.createPlaylist(name: name, id: id))
         return id
     }
-    
+
     public func setActivePlaylist(id: UUID?) async throws {
         try await dispatch(.setActivePlaylist(id))
     }
-    
+
     public func startRotation(playlistId: UUID) async throws {
-        try await dispatch(.startRotation(playlistId: playlistId))
+        try await dispatch(.startRotationWithPlaylist(playlistId: playlistId))
     }
     
     public func stopRotation() async throws {
